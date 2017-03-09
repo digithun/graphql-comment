@@ -14,7 +14,10 @@ function createTypeComposer(options = {}) {
       name: 'atSlug',
       type: 'String',
       query: (query, value, resolveParams) => {
-        query.slug = new RegExp(`^((${value})((?!/).*))$`, 'i');
+        if (!/^[\w|\/]*$/i.test(value)) {
+          throw new Error('argument not valid');
+        }
+        query.slug = new RegExp(`^(${value})([a-zA-Z0-9]*)$`, 'g');
       },
     });
   
