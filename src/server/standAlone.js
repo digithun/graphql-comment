@@ -9,11 +9,13 @@ function buildSchema() {
   const commentTC = createTypeComposer();
 
   GQC.rootQuery().addFields({
-    getComments: commentTC.get('$findMany'),
+    comments: commentTC.getResolver('findMany'),
+    commentConnection: commentTC.getResolver('connection'),
+    count: commentTC.getResolver('count'),
   });
 
   GQC.rootMutation().addFields({
-    reply: commentTC.get('$reply'),
+    reply: commentTC.getResolver('reply'),
   });
 
   return GQC.buildSchema();
