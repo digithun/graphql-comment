@@ -11,7 +11,7 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import KeyboardAvoidingViewCustom from '../KeyboardAvoidingViewCustom';
+import KeyboardAvoidingViewCustom from './KeyboardAvoidingViewCustom';
 import Comment from './Comment';
 
 const { height, width } = Dimensions.get('window');
