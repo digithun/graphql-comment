@@ -78,7 +78,7 @@ class CommentList extends React.Component {
     return (
       <View style={{ flex: 1, marginTop: 20 }}>
         <CommentHeader />
-        <CommentListA data={this.state.comments} isPosting={this.state.isPosting} onPostSuccess={this.onPostSuccess} />
+        <CommentListA getAuthorOnComment={this.props.getAuthorOnComment} data={this.props.comments} isPosting={this.state.isPosting} onPostSuccess={this.onPostSuccess} />
 
         <KeyboardAvoidingViewCustom>
           <View style={{ flexDirection: 'row', alignItems: 'center', width, padding: 5, borderTopWidth: 1, borderTopColor: '#C8C8D0', backgroundColor: '#FFFFFF' }}>
@@ -106,7 +106,9 @@ class CommentList extends React.Component {
 
 CommentList.fragment = gql`
   fragment CommentListView on Comment {
+    _id
     content
+    createdAt
     ...UserOnComment
   }
 `;

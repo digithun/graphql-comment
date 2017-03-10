@@ -4,38 +4,49 @@ const resolvers = require('./resolvers');
 
 const commentSchema = require('./schemas/comment');
 
+const atSlugFilter = {
+  name: 'atSlug',
+  type: 'String',
+  query: (query, value, resolveParams) => {
+    if (!/^[\w|\/]*$/i.test(value)) {
+      throw new Error('argument not valid');
+    }
+    query.slug = new RegExp(`^(${value})([a-zA-Z0-9]*)$`, 'g');
+  },
+};
+
+const firstLevelSlug = next => rp => {
+  if (!rp.rawQuery) {
+    rp.rawQuery = {};
+  }
+  rp.rawQuery.slug = new RegExp(`^([a-zA-Z0-9]*)$`, 'g');
+  return next(rp);
+};
+
 function createTypeComposer(options = {}) {
   let model = options.model || mongoose.model('Comment', commentSchema);
   const typeComposer = composeWithMongoose(model);
 
-  const atSlugFilter = {
-    name: 'atSlug',
-    type: 'String',
-    query: (query, value, resolveParams) => {
-      if (!/^[\w|\/]*$/i.test(value)) {
-        throw new Error('argument not valid');
-      }
-      query.slug = new RegExp(`^(${value})([a-zA-Z0-9]*)$`, 'g');
-    },
-  };
-
   const extendedFindManyResolver = typeComposer
     .getResolver('findMany')
-    .addFilterArg(atSlugFilter);
+    .addFilterArg(atSlugFilter)
+    .wrapResolve(firstLevelSlug);
   
   extendedFindManyResolver.name = 'findMany';
   typeComposer.addResolver(extendedFindManyResolver);
 
   const extendedConnectionResolver = typeComposer
     .getResolver('connection')
-    .addFilterArg(atSlugFilter);
+    .addFilterArg(atSlugFilter)
+    .wrapResolve(firstLevelSlug);
   
   extendedConnectionResolver.name = 'connection';
   typeComposer.addResolver(extendedConnectionResolver);
 
   const extendedCountResolver = typeComposer
     .getResolver('count')
-    .addFilterArg(atSlugFilter);
+    .addFilterArg(atSlugFilter)
+    .wrapResolve(firstLevelSlug);
   
   extendedCountResolver.name = 'count';
   typeComposer.addResolver(extendedCountResolver);

@@ -5,7 +5,11 @@
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --watch ./src/server ./scripts/dev-server.js"
+    "dev": "nodemon --watch ./src/server ./scripts/dev-server.js",
+    "dev:react-native": "restart --watch src/react-native --exec npm run react-native",
+    "react-native": "npm-run-all sync-react-native react-native-packager",
+    "sync-react-native": "rsync -va ./src ./example/node_modules/graphql-comment/",
+    "react-native-packager": "node ./example/node_modules/react-native/local-cli/cli.js start"
   },
   "keywords": [],
   "author": "",
@@ -31,7 +35,9 @@
     "graphql-compose-mongoose": "^1.4.8",
     "mongoose": "^4.8.6",
     "nodemon": "^1.11.0",
+    "npm-run-all": "^4.0.2",
     "react": "^15.4.2",
-    "react-native": "^0.42.0"
+    "react-native": "^0.42.0",
+    "restart": "0.0.4"
   }
 }

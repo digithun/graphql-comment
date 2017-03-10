@@ -2,5 +2,5 @@
 
 // export default CommentListView;
 
-import D from './containers/CommentListView';
-export default D;
+import CommentListView from './containers/CommentListView';
+export * from './containers/CommentListView';

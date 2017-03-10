@@ -75,9 +75,9 @@ class CommentList extends React.Component {
     const Comments = data.map((comment, key) => (
       <Comment
         key={key}
-        author={comment.author}
-        text={comment.text}
-        posted={comment.posted}
+        author={this.props.getAuthorOnComment(comment)}
+        text={comment.content}
+        posted={(new Date(comment.createdAt)).getTime()}
         liked={comment.liked}
       />
       ));
