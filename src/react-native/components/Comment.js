@@ -9,7 +9,6 @@ import {
   TouchableHighlight,
 } from 'react-native';
 import moment from 'moment';
-import gql from 'graphql-tag';
 
 const style = StyleSheet.create({
   container: {
@@ -113,12 +112,5 @@ class Comment extends React.Component {
     );
   }
 }
-
-Comment.fragment = gql`
-  fragment CommentListView on Comment {
-    content
-    ...UserComment
-  }
-`;
 
 export default Comment;

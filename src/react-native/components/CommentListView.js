@@ -11,6 +11,8 @@ import {
   Dimensions,
   TouchableOpacity,
 } from 'react-native';
+import gql from 'graphql-tag';
+
 import KeyboardAvoidingViewCustom from './KeyboardAvoidingViewCustom';
 import CommentHeader from './CommentHeader';
 import CommentListA from './CommentList';
@@ -101,5 +103,12 @@ class CommentList extends React.Component {
     );
   }
 }
+
+CommentList.fragment = gql`
+  fragment CommentListView on Comment {
+    content
+    ...UserOnComment
+  }
+`;
 
 export default CommentList;
