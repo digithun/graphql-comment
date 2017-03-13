@@ -15,10 +15,12 @@ const style = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButton: {
+  backButtonContainer: {
     position: 'absolute',
     left: 10,
     top: 10,
+  },
+  backButtonImage: {
     width: 13,
     height: 20,
     resizeMode: 'stretch',
@@ -34,8 +36,8 @@ class CommentHeader extends React.Component {
   render() {
     return (
       <View style={style.container}>
-        <TouchableOpacity onPress={this.props.onBackPress}>
-          <Image style={style.backButton} source={require('../img/back-button.png')} />
+        <TouchableOpacity style={style.backButtonContainer} onPress={this.props.onBackPress}>
+          <Image style={style.backButtonImage} source={require('../img/back-button.png')} />
         </TouchableOpacity>
         <Text style={style.text}>Comment</Text>
       </View>
