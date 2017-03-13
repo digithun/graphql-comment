@@ -15,9 +15,10 @@ function createResolver({
       commentId: GraphQLMongoID,
       content: 'JSON!',
     },
-    resolve: async ({ source, args }) => {
+    resolve: async ({ source, args, context }) => {
       let slugConcat = '';
       let fullSlugConcat = '';
+      const authorRef = await context.getMyRef();
       if (args.commentId) {
         const comment = await model.findOne({_id: args.commentId});
         if (!comment) {
@@ -31,6 +32,7 @@ function createResolver({
         slug: null,
         fullSlug: null,
         content: args.content,
+        authorRef,
       });
 
       let slug = comment._id.toString();
