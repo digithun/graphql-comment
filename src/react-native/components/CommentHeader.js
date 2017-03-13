@@ -4,6 +4,7 @@ import {
   Text,
   Image,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
 
 const style = StyleSheet.create({
@@ -33,7 +34,9 @@ class CommentHeader extends React.Component {
   render() {
     return (
       <View style={style.container}>
-        <Image style={style.backButton} source={require('../img/back-button.png')} />
+        <TouchableOpacity onPress={this.props.onBackPress}>
+          <Image style={style.backButton} source={require('../img/back-button.png')} />
+        </TouchableOpacity>
         <Text style={style.text}>Comment</Text>
       </View>
     );

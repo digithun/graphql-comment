@@ -64,7 +64,7 @@ class CommentList extends React.Component {
   render() {
     return (
       <View style={{ flex: 1, marginTop: 20 }}>
-        <CommentHeader />
+        <CommentHeader onBackPress={this.props.onBackPress} />
         <CommentListA
           ref={(node) => this.commentList = node}
           getAuthorOnComment={this.props.getAuthorOnComment}
