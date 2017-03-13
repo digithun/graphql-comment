@@ -13,7 +13,6 @@ function createResolver({
     args: {
       discussionRef: 'String!',
       commentId: GraphQLMongoID,
-      authorRef: 'String',
       content: 'JSON!',
     },
     resolve: async ({ source, args }) => {
@@ -27,12 +26,16 @@ function createResolver({
         slugConcat = comment.slug + '/';
         fullSlugConcat = comment.fullSlug + '/';
       }
+      await new Promise(
+        (resolve) => {
+          setTimeout(resolve, 5000);
+        }
+      );
       const comment = await model.create({
         discussionRef: args.discussionRef,
         slug: null,
         fullSlug: null,
         content: args.content,
-        authorRef: args.authorRef,
       });
 
       let slug = comment._id.toString();

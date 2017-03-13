@@ -44,23 +44,10 @@ class CommentList extends React.Component {
       comments: MockData,
     });
   }
-
-  onSendMessage = (msg, scrollView) => {
-    // Mock comment send message
-    const newComment = {
-      _id: 1234,
-      posted: Date.now(),
-      author: {
-        id: 12345,
-        name: 'Agela Mock',
-        profileThumbnail: 'https://randomuser.me/api/portraits/men/73.jpg',
-      },
-      text: this.state.textInput,
-      liked: 0,
-    };
-
+  
+  onSendMessage = (msg) => {
+    this.props.reply(msg);
     this.setState({
-      comments: [...this.state.comments, newComment],
       textInput: '',
       isPosting: true,
     });
@@ -78,7 +65,13 @@ class CommentList extends React.Component {
     return (
       <View style={{ flex: 1, marginTop: 20 }}>
         <CommentHeader />
-        <CommentListA getAuthorOnComment={this.props.getAuthorOnComment} data={this.props.comments} isPosting={this.state.isPosting} onPostSuccess={this.onPostSuccess} />
+        <CommentListA
+          ref={(node) => this.commentList = node}
+          getAuthorOnComment={this.props.getAuthorOnComment}
+          data={this.props.comments}
+          isPosting={this.state.isPosting}
+          onPostSuccess={this.onPostSuccess}
+        />
 
         <KeyboardAvoidingViewCustom>
           <View style={{ flexDirection: 'row', alignItems: 'center', width, padding: 5, borderTopWidth: 1, borderTopColor: '#C8C8D0', backgroundColor: '#FFFFFF' }}>
@@ -92,7 +85,7 @@ class CommentList extends React.Component {
               />
               {
                 this.state.textInput.length > 0 ?
-                  <TouchableOpacity onPress={() => this.onSendMessage()}>
+                  <TouchableOpacity onPress={() => this.onSendMessage(this.state.textInput)}>
                     <Image style={{ width: 20, height: 20, resizeMode: 'stretch' }} source={require('../img/icon-message.png')} />
                   </TouchableOpacity> : null
               }
