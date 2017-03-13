@@ -49,7 +49,7 @@ class KeyboardAvoidingViewCustom extends React.Component {
   }
 
   componentWillUnmount() {
-    this._onKeyboardChange.remove();
+    this.onKeyboardChangeListener.remove();
   }
 
   componentWillUpdate() {
