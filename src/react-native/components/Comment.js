@@ -104,7 +104,7 @@ class Comment extends React.Component {
       <TouchableHighlight underlayColor="#D9D9D9" onLongPress={() => this.onEditComment()}>
         <View style={style.container}>
           <View style={style.authorContainer}>
-            <Image style={style.authorThumbnail} source={author.profileThumbnail ? { uri: author.profileThumbnail } : null} />
+            <Image style={style.authorThumbnail} source={author.profilePicture ? { uri: author.profilePicture } : null} />
             <Text style={style.authorName}>{author.name}</Text>
           </View>
           {this.state.showEdit ? <CommentEditor /> : null}
