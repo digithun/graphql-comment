@@ -80,6 +80,25 @@ function createTypeComposer(options = {}) {
     typeComposer.addResolver(createResolver({ model, typeComposer }));
   });
 
+  typeComposer.setField('likeCount', {
+    type: 'Int!',
+    resolve: source => 
+      model.aggregate({ $match: { _id: source._id, likeRefs: { $ne: null } } })
+      .append({ $project: { count: { $size: '$likeRefs' } } }).then(r => r[0] ? r[0].count : 0),
+  });
+
+  typeComposer.setField('isLiked', {
+    type: 'Boolean!',
+    resolve: async (source, args, context) => {
+      if (!context.getMyRef) {
+        throw new Error('context.getMyRef not exists');
+      }
+      const ref = await context.getMyRef();
+      const count = await model.count({ _id: source._id, likeRefs: { $in: [ref] } });
+      return count > 0;
+    },
+  });
+
   return typeComposer;
 }
 

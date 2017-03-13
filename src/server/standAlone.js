@@ -16,6 +16,8 @@ function buildSchema() {
 
   GQC.rootMutation().addFields({
     reply: commentTC.getResolver('reply'),
+    likeComment: commentTC.getResolver('like'),
+    unlikeComment: commentTC.getResolver('unlike'),
   });
 
   return GQC.buildSchema();
@@ -32,6 +34,9 @@ function run(options = {
   app.use('/', graphqlHTTP({
     schema: buildSchema(),
     graphiql: options.graphiql,
+    context: {
+      getMyRef: () => Promise.resolve('whoami'),
+    },
   }));
 
   return app.listen(options.port, () => console.log(`comment server is running on 0.0.0.0:${options.port}`));

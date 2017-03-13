@@ -5,7 +5,8 @@ const CommentSchema = Schema({
   slug: String,
   fullSlug: String,
   content: {},
-  authorRef: String,
+  authorRef: String, // user reference
+  likeRefs: [{ type: String }], // user reference
 }, {
   timestamps: true,
 });

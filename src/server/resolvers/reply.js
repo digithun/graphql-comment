@@ -26,11 +26,6 @@ function createResolver({
         slugConcat = comment.slug + '/';
         fullSlugConcat = comment.fullSlug + '/';
       }
-      await new Promise(
-        (resolve) => {
-          setTimeout(resolve, 5000);
-        }
-      );
       const comment = await model.create({
         discussionRef: args.discussionRef,
         slug: null,

@@ -71,6 +71,8 @@ class CommentList extends React.Component {
           data={this.props.comments}
           isPosting={this.state.isPosting}
           onPostSuccess={this.onPostSuccess}
+          onLike={this.props.likeComment}
+          onUnlike={this.props.unlikeComment}
         />
 
         <KeyboardAvoidingViewCustom>
@@ -102,6 +104,8 @@ CommentList.fragment = gql`
     _id
     content
     createdAt
+    likeCount
+    isLiked
     ...UserOnComment
   }
 `;

@@ -87,8 +87,17 @@ class Comment extends React.Component {
     });
   }
 
+  onToggleLikePress = () => {
+    if (this.props.isLiked && this.props.onUnlike) {
+      this.props.onUnlike(this.props.id);
+    }
+    if (!this.props.isLiked && this.props.onLike) {
+      this.props.onLike(this.props.id);
+    }
+  }
+
   render() {
-    const { posted, author, text, liked } = this.props;
+    const { posted, author, text, isLiked, likeCount } = this.props;
     const relativePostedTime = moment(new Date(posted)).fromNow();
 
     return (
@@ -103,8 +112,10 @@ class Comment extends React.Component {
             <Text style={style.commentText}>{text}</Text>
           </View>
           <View style={style.footerContainer}>
-            <Image style={style.likedIcon} source={liked === 0 ? require('../img/icon-liked0.png') : require('../img/icon-like.png')} />
-            <Text style={style.likedNumber}>{liked === 0 ? '' : liked}</Text>
+            <TouchableOpacity onPress={this.onToggleLikePress}>
+              <Image style={style.likedIcon} source={!isLiked ? require('../img/icon-liked0.png') : require('../img/icon-like.png')} />
+            </TouchableOpacity>
+            <Text style={style.likedNumber}>{likeCount}</Text>
             <Text style={style.timeText}>{relativePostedTime}</Text>
           </View>
         </View>

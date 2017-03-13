@@ -45,7 +45,7 @@ function createCommentContainer(options = {}) {
     ${CommentListView.fragment}
   `;
 
-  const mutation = gql`
+  const replyMutation = gql`
     mutation Reply($discussionRef: String!, $content: JSON!){
       reply(discussionRef: $discussionRef, content: $content) {
         ...CommentListView
@@ -53,6 +53,26 @@ function createCommentContainer(options = {}) {
     }
     ${userOnCommentFragment}
     ${CommentListView.fragment}
+  `;
+
+  const likeMutation = gql`
+    mutation LikeComment($commentId: MongoID!){
+      likeComment(commentId: $commentId) {
+        _id
+        isLiked
+        likeCount
+      }
+    }
+  `;
+
+  const unlikeMutation = gql`
+    mutation UnlikeComment($commentId: MongoID!){
+      unlikeComment(commentId: $commentId) {
+        _id
+        isLiked
+        likeCount
+      }
+    }
   `;
 
   const withQuery = graphql(
@@ -66,8 +86,8 @@ function createCommentContainer(options = {}) {
     },
   );
 
-  const withMutation = graphql(
-    mutation,
+  const withReply = graphql(
+    replyMutation,
     {
       props: ({ ownProps, mutate }) => ({
         reply: (content) => {
@@ -82,7 +102,9 @@ function createCommentContainer(options = {}) {
                 __typename: 'Comment',
                 _id: 'unknow',
                 content,
-                createdAt: '2017-03-13T07:27:24.676Z',
+                isLiked: false,
+                likeCount: 0,
+                createdAt: (new Date()).toString(),
                 ...optimisticUserResponse({ ownProps, content }),
               },
             },
@@ -100,8 +122,92 @@ function createCommentContainer(options = {}) {
       }),
     },
   );
+
+  const withLike = graphql(
+    likeMutation,
+    {
+      props: ({ ownProps, mutate }) => ({
+        likeComment: (id) => {
+          const comment = ownProps.comments.filter(comment => comment._id === id);
+          return mutate({
+            variables: {
+              commentId: id,
+            },
+            optimisticResponse: {
+              __typename: 'Mutation',
+              likeComment: {
+                __typename: 'Comment',
+                _id: id,
+                isLiked: true,
+                likeCount: comment[0] ? comment[0].likeCount + 1 : undefined,
+              },
+            },
+            updateQueries: {
+              Comments: (prev, { mutationResult }) => {
+                const changedComment = mutationResult.data.likeComment;
+                return {
+                  ...prev,
+                  comments: prev.comments.map(comment => {
+                    if (comment._id === changedComment._id) {
+                      return {
+                        ...comment,
+                        ...changedComment
+                      };
+                    }
+                    return comment;
+                  }),
+                };
+              },
+            },
+          });
+        },
+      }),
+    },
+  );
+
+  const withUnlike = graphql(
+    unlikeMutation,
+    {
+      props: ({ ownProps, mutate }) => ({
+        unlikeComment: (id) => {
+          const comment = ownProps.comments.filter(comment => comment._id === id);
+          return mutate({
+            variables: {
+              commentId: id,
+            },
+            optimisticResponse: {
+              __typename: 'Mutation',
+              unlikeComment: {
+                __typename: 'Comment',
+                _id: id,
+                isLiked: false,
+                likeCount: comment[0] ? comment[0].likeCount - 1 : undefined,
+              },
+            },
+            updateQueries: {
+              Comments: (prev, { mutationResult }) => {
+                const changedComment = mutationResult.data.unlikeComment;
+                return {
+                  ...prev,
+                  comments: prev.comments.map(comment => {
+                    if (comment._id === changedComment._id) {
+                      return {
+                        ...comment,
+                        ...changedComment
+                      };
+                    }
+                    return comment;
+                  }),
+                };
+              },
+            },
+          });
+        },
+      }),
+    },
+  );
   
-  return withMutation(withQuery(CommentListView));
+  return withQuery(withUnlike(withLike(withReply(CommentListView))));
 }
 
 export {
