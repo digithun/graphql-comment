@@ -66,6 +66,8 @@ class CommentList extends React.Component {
       this.subscriptions = [
         Keyboard.addListener('keyboardDidHide', this.onKeyboardChange),
         Keyboard.addListener('keyboardDidShow', this.onKeyboardChange),
+        Keyboard.addListener('keyboardDidHide', this.onKeyboardHide),
+        Keyboard.addListener('keyboardDidShow', this.onKeyboardShow),
       ];
     }
   }
@@ -96,7 +98,9 @@ class CommentList extends React.Component {
     });
 
     if (this.props.isPosting) {
-      this.scrollView.scrollTo({ x: 0, y: this.contentHeight - scrollViewHeight + 10, animate: true });
+      if (this.contentHeight > scrollViewHeight) {
+        this.scrollView.scrollTo({ x: 0, y: this.contentHeight - scrollViewHeight + 10, animate: true });
+      }
       this.props.onPostSuccess();
     }
   }
@@ -104,7 +108,9 @@ class CommentList extends React.Component {
   onContentSizeChange = (contentHeight) => {
     this.contentHeight = contentHeight;
     if (this.props.isPosting && !this.state.keyboardVisible) {
-      this.scrollView.scrollToEnd();
+      if (this.contentHeight > this.state.scrollViewHeight) {
+        this.scrollView.scrollToEnd();
+      }
       this.props.onPostSuccess();
     }
   }
