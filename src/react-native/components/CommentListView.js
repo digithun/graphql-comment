@@ -55,9 +55,12 @@ class CommentList extends React.Component {
   }
 
   onPostSuccess = () => {
-    this.setState({
-      isPosting: false,
-    });
+    if (this.state.isPosting) {
+      this.setState({
+        textInput: '',
+        isPosting: false,
+      });
+    }
   }
 
 
