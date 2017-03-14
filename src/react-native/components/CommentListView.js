@@ -72,6 +72,9 @@ class CommentList extends React.Component {
           getAuthorOnComment={this.props.getAuthorOnComment}
           data={this.props.comments}
           isPosting={this.state.isPosting}
+          loading={this.props.loading}
+          hasMoreComment={this.props.hasMoreComment}
+          onLoadMore={this.props.loadMore}
           onPostSuccess={this.onPostSuccess}
           onLike={this.props.likeComment}
           onUnlike={this.props.unlikeComment}

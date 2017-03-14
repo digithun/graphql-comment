@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { composeWithMongoose } = require('graphql-compose-mongoose');
+const { composeWithConnection } = require('graphql-compose-connection');
 const resolvers = require('./resolvers');
 
 const commentSchema = require('./schemas/comment');
@@ -42,6 +43,33 @@ function createTypeComposer(options = {}) {
   
   extendedConnectionResolver.name = 'connection';
   typeComposer.addResolver(extendedConnectionResolver);
+
+  typeComposer.removeResolver('connection');
+
+  composeWithConnection(typeComposer,
+    {
+      findResolverName: 'findMany',
+      countResolverName: 'count',
+      sort: {
+        CREATEDAT_DESC: {
+          value: { createdAt: -1, _id: -1 },
+          // By these fields MUST be created COMPOUND UNIQUE index in database!
+          cursorFields: ['createdAt', '_id'],
+          beforeCursorQuery: (rawQuery, cursorData, resolveParams) => {
+            if (!rawQuery.createdAt) rawQuery.createdAt = {};
+            if (!rawQuery._id) rawQuery._id = {};
+            rawQuery.createdAt.$gt = new Date(cursorData.createdAt);
+            rawQuery._id.$gt = cursorData._id;
+          },
+          afterCursorQuery: (rawQuery, cursorData, resolveParams) => {
+            if (!rawQuery.createdAt) rawQuery.createdAt = {};
+            if (!rawQuery._id) rawQuery._id = {};
+            rawQuery.createdAt.$lt = new Date(cursorData.createdAt);
+            rawQuery._id.$lt = cursorData._id;
+          },
+        }
+      },
+  });
 
   const extendedCountResolver = typeComposer
     .getResolver('count')

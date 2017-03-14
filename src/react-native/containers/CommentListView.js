@@ -9,19 +9,6 @@ const defaultUserOnComment = gql`
   }
 `;
 
-const mapQueryToProps = ({ data }) => {
-  if (data.error) {
-    console.error(data.error)
-  }
-  return {
-    comments: data.comments || [],
-  };
-};
-
-const mapPropsToOptions = ({ discussionRef }) => ({
-  discussionRef,
-});
-
 const defaultGetAuthorOnComment = comment => ({
   id: comment.authorRef,
   name: "Anonymous",
@@ -36,9 +23,17 @@ function createCommentContainer(options = {}) {
   const getAuthorOnComment = options.getAuthorOnComment || defaultGetAuthorOnComment;
   const optimisticUserResponse = options.optimisticUserResponse || defaultOptimisticUserResponse;
   const query = gql`
-    query Comments($discussionRef: String!){
-      comments(filter: { discussionRef: $discussionRef }) {
-        ...CommentListView
+    query Comments($discussionRef: String!, $after: ConnectionCursor){
+      commentConnection(first: 2, filter: { discussionRef: $discussionRef }, after: $after, sort: CREATEDAT_DESC) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        edges {
+          node {
+            ...CommentListView
+          }
+        }
       }
     }
     ${userOnCommentFragment}
@@ -75,6 +70,48 @@ function createCommentContainer(options = {}) {
     }
   `;
 
+  const mapQueryToProps = ({ ownProps, data }) => {
+    if (data.error) {
+      console.error(data.error)
+    }
+    return {
+      comments: !data.commentConnection ? [] : data.commentConnection.edges.map(edge => edge.node),
+      loading: data.loading,
+      hasMoreComment: !data.commentConnection ? false : data.commentConnection.pageInfo.hasNextPage,
+      loadMore: () => {
+        if (!data.commentConnection) {
+          return Promise.reject();
+        }
+        return data.fetchMore({
+          variables: {
+            discussionRef: ownProps.discussionRef,
+            after: data.commentConnection.pageInfo.endCursor,
+          },
+          updateQuery: (previousResult, { fetchMoreResult }) => {
+            if (!fetchMoreResult.data) {
+              return previousResult;
+            }
+            return {
+              ...previousResult,
+              commentConnection: {
+                ...previousResult.commentConnection,
+                pageInfo: fetchMoreResult.data.commentConnection.pageInfo,
+                edges: [...previousResult.commentConnection.edges, ...fetchMoreResult.data.commentConnection.edges],
+              },
+            };
+          },
+        });
+      },
+    };
+  };
+
+  const mapPropsToOptions = ({ discussionRef }) => ({
+    variables: {
+      discussionRef,
+    },
+  });
+
+
   const withQuery = graphql(
     query,
     {
@@ -109,11 +146,29 @@ function createCommentContainer(options = {}) {
               },
             },
             updateQueries: {
-              Comments: (prev, { mutationResult }) => {
+              Comments: (previousResult, { mutationResult }) => {
                 const newComment = mutationResult.data.reply;
+                if (!mutationResult.data) {
+                  return previousResult;
+                }
+                console.log({
+                  ...previousResult,
+                  commentConnection: {
+                    ...previousResult.commentConnection,
+                    edges: [...previousResult.commentConnection.edges, {
+                      node: newComment,
+                    }],
+                  },
+                })
                 return {
-                  ...prev,
-                  comments: [...prev.comments, newComment],
+                  ...previousResult,
+                  commentConnection: {
+                    ...previousResult.commentConnection,
+                    edges: [{
+                      node: newComment,
+                      __typename: 'CommentEdge',
+                    }, ...previousResult.commentConnection.edges],
+                  },
                 };
               },
             },
@@ -147,15 +202,22 @@ function createCommentContainer(options = {}) {
                 const changedComment = mutationResult.data.likeComment;
                 return {
                   ...prev,
-                  comments: prev.comments.map(comment => {
-                    if (comment._id === changedComment._id) {
-                      return {
-                        ...comment,
-                        ...changedComment
-                      };
-                    }
-                    return comment;
-                  }),
+                  commentConnection: {
+                    ...prev.commentConnection,
+                    edges: prev.commentConnection.edges.map(edge => {
+                      const comment = edge.node;
+                      if (comment._id === changedComment._id) {
+                        return {
+                          ...edge,
+                          node: {
+                            ...comment,
+                            ...changedComment,
+                          },
+                        };
+                      }
+                      return edge;
+                    }),
+                  },
                 };
               },
             },
@@ -189,15 +251,22 @@ function createCommentContainer(options = {}) {
                 const changedComment = mutationResult.data.unlikeComment;
                 return {
                   ...prev,
-                  comments: prev.comments.map(comment => {
-                    if (comment._id === changedComment._id) {
-                      return {
-                        ...comment,
-                        ...changedComment
-                      };
-                    }
-                    return comment;
-                  }),
+                  commentConnection: {
+                    ...prev.commentConnection,
+                    edges: prev.commentConnection.edges.map(edge => {
+                      const comment = edge.node;
+                      if (comment._id === changedComment._id) {
+                        return {
+                          ...edge,
+                          node: {
+                            ...comment,
+                            ...changedComment,
+                          },
+                        };
+                      }
+                      return edge;
+                    }),
+                  },
                 };
               },
             },
