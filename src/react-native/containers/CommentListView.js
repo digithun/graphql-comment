@@ -24,7 +24,7 @@ function createCommentContainer(options = {}) {
   const optimisticUserResponse = options.optimisticUserResponse || defaultOptimisticUserResponse;
   const query = gql`
     query Comments($discussionRef: String!, $after: ConnectionCursor){
-      commentConnection(first: 2, filter: { discussionRef: $discussionRef }, after: $after, sort: CREATEDAT_DESC) {
+      commentConnection(first: 20, filter: { discussionRef: $discussionRef }, after: $after, sort: CREATEDAT_DESC) {
         pageInfo {
           hasNextPage
           endCursor
@@ -151,15 +151,6 @@ function createCommentContainer(options = {}) {
                 if (!mutationResult.data) {
                   return previousResult;
                 }
-                console.log({
-                  ...previousResult,
-                  commentConnection: {
-                    ...previousResult.commentConnection,
-                    edges: [...previousResult.commentConnection.edges, {
-                      node: newComment,
-                    }],
-                  },
-                })
                 return {
                   ...previousResult,
                   commentConnection: {

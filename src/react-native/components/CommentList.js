@@ -22,7 +22,6 @@ import Comment from './Comment';
 const { height, width } = Dimensions.get('window');
 const style = StyleSheet.create({
   scrollView: {
-    paddingTop: 10,
     backgroundColor: '#F9FAFB',
   },
 });
@@ -31,36 +30,37 @@ function cloneWithData(dataSource, data) {
   if (!data) {
     return dataSource.cloneWithRows([]);
   }
-  return dataSource.cloneWithRows(data, data.map((row,i)=>i));
+  return dataSource.cloneWithRows(data);
 }
+
+const SCROLL_VIEW_HEIGHT = height - 20 - 40 - 46; // marginTop: 20, header: 40, TextInput: 46;
 
 class CommentList extends React.Component {
   constructor(props) {
     super(props);
     const dataSource = new ListView.DataSource({
-      rowHasChanged: (row1, row2) => true,
+      rowHasChanged: (row1, row2) => row1 !== row2,
     });
     this.state = {
       mainScrollY: 0,
       onOldScrollPosition: true,
       keyboardVisible: false,
-      scrollViewHeight: height - 20 - 40 - 46, // marginTop: 20, header: 40, TextInput: 46
+      keyboardVisibleLv2: false,
+      scrollViewHeight: SCROLL_VIEW_HEIGHT,
+      keyboardHeight: 0,
       contentHeight: 0,
-      paddingBottomScrollView: 0,
-      isSetBottomScrollView: true,
       dataSource: cloneWithData(dataSource, this.props.data),
     };
   }
 
   componentWillUpdate() {
-    LayoutAnimation.easeInEaseOut();
+    // LayoutAnimation.easeInEaseOut();
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.props.data !== nextProps.data) {
       this.setState({
         dataSource: cloneWithData(this.state.dataSource, nextProps.data),
-        isSetBottomScrollView: false,
       });
     }
     const oldLength = this.props.data.length;
@@ -72,11 +72,13 @@ class CommentList extends React.Component {
     if (Platform.OS === 'ios') {
       this.subscriptions = [
         Keyboard.addListener('keyboardWillChangeFrame', this.onKeyboardChange),
+        Keyboard.addListener('keyboardWillChangeFrame', this.onKeyboardToggle),
         Keyboard.addListener('keyboardDidHide', this.onKeyboardHide),
         Keyboard.addListener('keyboardDidShow', this.onKeyboardShow),
       ];
     } else {
       this.subscriptions = [
+        Keyboard.addListener('keyboardWillChangeFrame', this.onKeyboardToggle),
         Keyboard.addListener('keyboardDidHide', this.onKeyboardChange),
         Keyboard.addListener('keyboardDidShow', this.onKeyboardChange),
         Keyboard.addListener('keyboardDidHide', this.onKeyboardHide),
@@ -112,20 +114,20 @@ class CommentList extends React.Component {
     });
   }
 
+  onKeyboardToggle = () => {
+    this.setState({
+      keyboardVisibleLv2: !this.state.keyboardVisibleLv2,
+    });
+  }
+
   onKeyboardChange = (e) => {
     const { startCoordinates, endCoordinates } = e;
     const keyboardHeight = startCoordinates.screenY - endCoordinates.screenY;
     const scrollViewHeight = this.state.scrollViewHeight - keyboardHeight;
     this.setState({
       scrollViewHeight,
+      keyboardHeight: keyboardHeight > 0 ? keyboardHeight : 0,
     });
-
-    if (this.props.isPosting) {
-      if (this.contentHeight > scrollViewHeight) {
-        this.scrollView.scrollTo({ x: 0, y: 0, animate: true });
-      }
-      this.props.onPostSuccess();
-    }
   }
 
   onContentSizeChange = (contentHeight) => {
@@ -133,39 +135,41 @@ class CommentList extends React.Component {
     this.setState({
       contentHeight,
     });
-    if (!this.state.isSetBottomScrollView) {
-      this.setState({
-        paddingBottomScrollView: this.state.scrollViewHeight > contentHeight ? this.state.scrollViewHeight - contentHeight : 0,
-        isSetBottomScrollView: true,
-      });
-    }
-    if (this.props.isPosting && !this.state.keyboardVisible) {
-      if (this.contentHeight > this.state.scrollViewHeight) {
+    if (this.props.isPosting) {
+      if (this.state.mainScrollY === 0) {
+        this.scrollView.scrollTo({ y: 1, x: 0, animated: true });
+      }
+      else {
         this.scrollView.scrollTo({ y: 0, x: 0, animated: true });
       }
       this.props.onPostSuccess();
     }
-    if (!this.state.onOldScrollPosition) {
+    else {
+      this.scrollView.scrollTo({ x: 0, y: this.state.mainScrollY + 1, animated: true });
     }
   }
 
   renderLoadMore = () => {
     if (!this.props.hasMoreComment) {
-      return <View style={{height: 10, alignItems: 'center', justifyContent: 'center'}}/>;
+      return <View style={{height: 10}}/>;
     }
     let rendered;
     if (this.props.loading) {
       rendered = <ActivityIndicator/>;
     }
     else {
-      rendered = <Button onPress={this.onLoadMore} title="load more"/>;
+      rendered = <Button onPress={this.onLoadMore} title="previous comments"/>;
     }
     return <View style={{height: 50, alignItems: 'center', justifyContent: 'center'}}>{rendered}</View>;
   }
 
   render() {
     const { data } = this.props;
-    console.log(this.state.paddingBottomScrollView)
+    let paddingForKeyboard = (!this.state.keyboardVisibleLv2 ? 0 : this.state.keyboardHeight);
+    let paddingBottom = SCROLL_VIEW_HEIGHT - this.state.keyboardHeight - this.state.contentHeight;
+    if (paddingBottom < 0) {
+      paddingBottom = 0;
+    }
 
     return (
       <View>
@@ -177,13 +181,17 @@ class CommentList extends React.Component {
           }}
           renderScrollComponent={props => <InvertibleScrollView {...props} inverted />}
           ref={(scrollView) => { this.scrollView = scrollView; }}
-          style={[style.scrollView, { height: this.state.scrollViewHeight }]}
+          style={[style.scrollView,
+            {
+              height: SCROLL_VIEW_HEIGHT,
+              paddingTop: paddingBottom + paddingForKeyboard,
+            }
+          ]}
           onContentSizeChange={(contentWidth, contentHeight) => this.onContentSizeChange(contentHeight)}
           dataSource={this.state.dataSource}
           enableEmptySections={true}
           renderRow={(comment) => {
             return <Comment
-              key={comment._id}
               id={comment._id}
               author={this.props.getAuthorOnComment(comment)}
               text={comment.content}
@@ -195,7 +203,6 @@ class CommentList extends React.Component {
             />;
           }}
           renderFooter={this.renderLoadMore}
-          renderHeader={() => <View style={{height: this.state.paddingBottomScrollView}}/>}
         >
         </ListView>
       </View>

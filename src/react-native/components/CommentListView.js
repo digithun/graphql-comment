@@ -47,6 +47,7 @@ class CommentList extends React.Component {
   
   onSendMessage = (msg) => {
     this.props.reply(msg);
+    this.textInput.clear();
     this.setState({
       textInput: '',
       isPosting: true,
@@ -85,7 +86,9 @@ class CommentList extends React.Component {
             <Image style={{ width: 30, height: 20, resizeMode: 'stretch' }} source={require('../img/icon-camera.png')} />
             <View style={{ marginLeft: 10, flexDirection: 'row', alignItems: 'center', borderColor: '#CACBD2', borderWidth: 1, borderRadius: 5, height: 35, width: this.width - 50 }}>
               <TextInput
+                ref={node => this.textInput = node}
                 style={{ marginLeft: 10, height: 35, width: 280 }}
+                onEndEditing={() => console.log('end edit ;)')}
                 onChangeText={text => this.setState({ textInput: text })}
                 placeholder="Write a comment..."
                 value={this.state.textInput}

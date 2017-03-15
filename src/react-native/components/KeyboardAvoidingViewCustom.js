@@ -45,7 +45,14 @@ class KeyboardAvoidingViewCustom extends React.Component {
     const offsetY = keyboardFrame.start.screenY - keyboardFrame.end.screenY;
     this.setState({
       bottom: this.state.bottom + offsetY,
+      duration: e.duration,
     });
+    LayoutAnimation.configureNext({
+      duration: e.duration,
+      update: {
+        type: LayoutAnimation.Types.keyboard,
+      },
+    })
   }
 
   componentWillUnmount() {
@@ -53,7 +60,13 @@ class KeyboardAvoidingViewCustom extends React.Component {
   }
 
   componentWillUpdate() {
-    LayoutAnimation.easeInEaseOut();
+    // LayoutAnimation.easeInEaseOut();
+    // LayoutAnimation.configureNext({
+    //   duration: 100,
+    //   update: {
+    //     type: LayoutAnimation.Types.easeInEaseOut,
+    //   },
+    // })
   }
 
   _onPress() {
