@@ -5,8 +5,8 @@ const { GQC } = require('graphql-compose');
 
 const createTypeComposer = require('./createTypeComposer');
 
-function buildSchema() {
-  const commentTC = createTypeComposer();
+function buildSchema(options) {
+  const commentTC = createTypeComposer(options);
 
   GQC.rootQuery().addFields({
     comments: commentTC.getResolver('findMany'),
@@ -23,16 +23,22 @@ function buildSchema() {
   return GQC.buildSchema();
 }
 
-function run(options = {
+const defaultOptions = {
   port: 8080,
   databaseUri: 'mongodb://localhost:27017/comment-standalone-dev',
   graphiql: true,
-}) {
+  notifyActionInfo: {
+    url: 'http://localhost:8888',
+  },
+};
+
+function run(options = {}) {
+  options = Object.assign(defaultOptions, options);
   const app = express();
   mongoose.connect(options.databaseUri);
 
   app.use('/', graphqlHTTP({
-    schema: buildSchema(),
+    schema: buildSchema(options),
     graphiql: options.graphiql,
     context: {
       getMyRef: () => Promise.resolve('whoami'),

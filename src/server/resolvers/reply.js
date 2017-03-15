@@ -6,6 +6,7 @@ const moment = require('moment');
 function createResolver({
   model,
   typeComposer,
+  notifier,
 }) {
   const resolver = new Resolver({
     name: 'reply',
@@ -40,6 +41,13 @@ function createResolver({
       let fullSlug = `${timeStamp}:${slug}`;
       comment.slug = slugConcat + slug;
       comment.fullSlug = fullSlugConcat + fullSlug;
+      notifier.notify({
+        action: 'reply',
+        discussionRef: args.discussionRef,
+        commendId: comment._id.toString(),
+        authorRef,
+        content: args.content,
+      });
       return comment.save();
     }
   });

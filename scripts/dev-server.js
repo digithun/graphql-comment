@@ -1,3 +1,7 @@
 const { run } = require('../src/server');
 
-run();
+run({
+  notifyActionInfo: {
+    url: process.env.NOTI_URL || 'http://localhost:8888',
+  },
+});

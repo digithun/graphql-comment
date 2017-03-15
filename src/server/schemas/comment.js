@@ -1,6 +1,6 @@
 const Schema = require('mongoose').Schema;
 
-const CommentSchema = Schema({
+const commentSchema = Schema({
   discussionRef: { type: String, required: true },
   slug: String,
   fullSlug: String,
@@ -11,4 +11,4 @@ const CommentSchema = Schema({
   timestamps: true,
 });
 
-module.exports = CommentSchema;
+module.exports = commentSchema;
