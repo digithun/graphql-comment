@@ -92,8 +92,8 @@ class CommentList extends React.Component {
     this.subscriptions.forEach(sub => sub.remove());
   }
 
-  onCommentDelete = (id) => {
-    this.props.deleteComment(id);
+  onDeleteComment = (id) => {
+    this.props.onDeleteComment(id);
   }
 
   onLoadMore = () => {
@@ -196,6 +196,7 @@ class CommentList extends React.Component {
           enableEmptySections={true}
           renderRow={(comment) => {
             return <Comment
+              key={comment._id}
               id={comment._id}
               author={this.props.getAuthorOnComment(comment)}
               text={comment.content}
@@ -204,7 +205,7 @@ class CommentList extends React.Component {
               likeCount={comment.likeCount}
               onLike={this.props.onLike}
               onUnlike={this.props.onUnlike}
-              onDelete={this.onCommentDelete}
+              onDelete={this.onDeleteComment}
             />;
           }}
           renderFooter={this.renderLoadMore}

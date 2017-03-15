@@ -70,6 +70,14 @@ function createCommentContainer(options = {}) {
     }
   `;
 
+  const deleteMutation = gql`
+    mutation deleteComment($commentId: MongoID!){
+      deleteComment(commentId: $commentId) {
+        _id
+      }
+    }
+  `;
+
   const mapQueryToProps = ({ ownProps, data }) => {
     if (data.error) {
       console.error(data.error)
@@ -266,8 +274,44 @@ function createCommentContainer(options = {}) {
       }),
     },
   );
+
+  const withDelete = graphql(
+    deleteMutation,
+    {
+      props: ({ ownProps, mutate }) => ({
+        deleteComment: (id) => {
+          return mutate({
+            variables: {
+              commentId: id,
+            },
+            optimisticResponse: {
+              __typename: 'Mutation',
+              deleteComment: {
+                __typename: 'Comment',
+                _id: id,
+              },
+            },
+            updateQueries: {
+              Comments: (prev, { mutationResult }) => {
+                const changedComment = mutationResult.data.deleteComment;
+                return {
+                  ...prev,
+                  commentConnection: {
+                    ...prev.commentConnection,
+                    edges: prev.commentConnection.edges.filter(edge => {
+                      return edge.node._id !== changedComment._id;
+                    }),
+                  },
+                };
+              },
+            },
+          });
+        },
+      }),
+    },
+  );
   
-  return withQuery(withUnlike(withLike(withReply(CommentListView))));
+  return withQuery(withDelete(withUnlike(withLike(withReply(CommentListView)))));
 }
 
 export {

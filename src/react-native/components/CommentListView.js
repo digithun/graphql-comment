@@ -79,6 +79,7 @@ class CommentList extends React.Component {
           onPostSuccess={this.onPostSuccess}
           onLike={this.props.likeComment}
           onUnlike={this.props.unlikeComment}
+          onDeleteComment={this.props.deleteComment}
         />
 
         <KeyboardAvoidingViewCustom>
