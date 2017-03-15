@@ -18,6 +18,7 @@ function buildSchema(options) {
     reply: commentTC.getResolver('reply'),
     likeComment: commentTC.getResolver('like'),
     unlikeComment: commentTC.getResolver('unlike'),
+    deleteComment: commentTC.getResolver('delete'),
   });
 
   return GQC.buildSchema();

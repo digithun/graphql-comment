@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   TouchableHighlight,
+  Button
 } from 'react-native';
 import moment from 'moment';
 
@@ -66,8 +67,8 @@ class CommentEditor extends React.Component {
   render() {
     return (
       <View style={{ position: 'absolute', marginLeft: 40, zIndex: 100, borderWidth: 1, padding: 10, backgroundColor: '#FFFFFF', borderColor: '#FF0000' }}>
-        <Text>Edit</Text>
-        <Text>Delete</Text>
+        <Button onPress={this.props.onDelete} title="Delete"/>
+        <Button onPress={this.props.onCancel} title="Cancel"/>
       </View>
     );
   }
@@ -79,6 +80,18 @@ class Comment extends React.Component {
     this.state = {
       showEdit: false,
     };
+  }
+
+  onDelete = () => {
+    if (this.props.onDelete) {
+      this.props.onDelete(this.props.id);
+    }
+  }
+
+  onCancel = () => {
+    this.setState({
+      showEdit: false,
+    });
   }
 
   onEditComment = () => {
@@ -107,7 +120,7 @@ class Comment extends React.Component {
             <Image style={style.authorThumbnail} source={author.profilePicture ? { uri: author.profilePicture } : null} />
             <Text style={style.authorName}>{author.name}</Text>
           </View>
-          {this.state.showEdit ? <CommentEditor /> : null}
+          {this.state.showEdit ? <CommentEditor onDelete={this.onDelete} onCancel={this.onCancel}/> : null}
           <View>
             <Text style={style.commentText}>{text}</Text>
           </View>

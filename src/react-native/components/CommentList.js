@@ -92,6 +92,10 @@ class CommentList extends React.Component {
     this.subscriptions.forEach(sub => sub.remove());
   }
 
+  onCommentDelete = (id) => {
+    this.props.deleteComment(id);
+  }
+
   onLoadMore = () => {
     if (this.props.onLoadMore) {
       this.setState({
@@ -200,6 +204,7 @@ class CommentList extends React.Component {
               likeCount={comment.likeCount}
               onLike={this.props.onLike}
               onUnlike={this.props.onUnlike}
+              onDelete={this.onCommentDelete}
             />;
           }}
           renderFooter={this.renderLoadMore}
