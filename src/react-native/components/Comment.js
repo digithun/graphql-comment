@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   Image,
   TouchableHighlight,
-  Button
+  Button,
+  Modal,
 } from 'react-native';
 import moment from 'moment';
 
@@ -61,14 +62,22 @@ const style = StyleSheet.create({
     right: 0,
     color: '#ADAEAF',
   },
+  buttonEditContainer: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
 });
 
 class CommentEditor extends React.Component {
   render() {
     return (
-      <View style={{ position: 'absolute', marginLeft: 40, zIndex: 100, borderWidth: 1, padding: 10, backgroundColor: '#FFFFFF', borderColor: '#FF0000' }}>
-        <Button onPress={this.props.onDelete} title="Delete"/>
-        <Button onPress={this.props.onCancel} title="Cancel"/>
+      <View style={{ position: 'absolute', marginLeft: 40, marginTop: 10, zIndex: 100, borderWidth: 1, backgroundColor: '#FFFFFF', borderColor: '#000000' }}>
+        <TouchableOpacity style={style.buttonEditContainer} onPress={this.props.onDelete}>
+          <Text>Delete</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={style.buttonEditContainer} onPress={this.props.onCancel}>
+          <Text>Cancel</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -116,7 +125,7 @@ class Comment extends React.Component {
     const relativePostedTime = moment(new Date(posted)).fromNow();
 
     return (
-      <TouchableHighlight underlayColor="#D9D9D9" onLongPress={() => this.onEditComment()}>
+      <TouchableHighlight underlayColor="#D9D9D9" onLongPress={this.onEditComment}>
         <View style={style.container}>
           <View style={style.authorContainer}>
             <Image style={style.authorThumbnail} source={author.profilePicture ? { uri: author.profilePicture } : null} />
