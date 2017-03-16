@@ -14,9 +14,11 @@ export const createReducerOnReply = (discussionRef, updateQuery) => (previousRes
 }
 
 export const createReducerOnDelete = (discussionRef, updateQuery) => (previousResult, action, variables) => {
-  if (action.type === 'APOLLO_MUTATION_RESULT' && action.operationName === 'deleteComment' && action.variables && action.variables.discussionRef === discussionRef) {
+  if (action.type === 'APOLLO_MUTATION_RESULT' && action.operationName === 'deleteComment') {
     const deletedComment = action.result.data.deleteComment;
-    return updateQuery(previousResult, deletedComment);
+    if (deletedComment.discussionRef === discussionRef) {
+      return updateQuery(previousResult, deletedComment);
+    }
   }
   return previousResult;
 }

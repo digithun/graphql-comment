@@ -74,6 +74,7 @@ function createCommentContainer(options = {}) {
     mutation deleteComment($commentId: MongoID!){
       deleteComment(commentId: $commentId) {
         _id
+        discussionRef
       }
     }
   `;
@@ -280,6 +281,7 @@ function createCommentContainer(options = {}) {
     {
       props: ({ ownProps, mutate }) => ({
         deleteComment: (id) => {
+          const comment = ownProps.comments.filter(comment => comment._id === id);
           return mutate({
             variables: {
               commentId: id,
@@ -289,6 +291,7 @@ function createCommentContainer(options = {}) {
               deleteComment: {
                 __typename: 'Comment',
                 _id: id,
+                discussionRef: comment.discussionRef,
               },
             },
             updateQueries: {
