@@ -4,9 +4,12 @@ const mongoose = require('mongoose');
 const { GQC } = require('graphql-compose');
 
 const createTypeComposer = require('./createTypeComposer');
+const helpers = require('./helpers');
 
 function buildSchema(options) {
-  const commentTC = createTypeComposer(options);
+  let commentTC = createTypeComposer(options);
+
+  commentTC = helpers.addResolverMiddleware('like', helpers.actionTriggerMiddleware('like', console.log))(commentTC);
 
   GQC.rootQuery().addFields({
     comments: commentTC.getResolver('findMany'),

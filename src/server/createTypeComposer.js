@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const { composeWithMongoose } = require('graphql-compose-mongoose');
 const { composeWithConnection } = require('graphql-compose-connection');
 const resolvers = require('./resolvers');
-const { createNotifier, nopeNotifier } = require('./notifier');
 
 const commentSchema = require('./schemas/comment');
 
@@ -28,10 +27,6 @@ const firstLevelSlug = next => rp => {
 function createTypeComposer(options = {}) {
   let model = options.model || mongoose.model('Comment', commentSchema);
   const typeComposer = composeWithMongoose(model);
-  let notifier = nopeNotifier;
-  if (options.notifyActionInfo) {
-    notifier = createNotifier(options.notifyActionInfo);
-  }
 
   const extendedFindManyResolver = typeComposer
     .getResolver('findMany')
@@ -109,7 +104,7 @@ function createTypeComposer(options = {}) {
 
   Object.keys(resolvers).forEach(key => {
     const createResolver = resolvers[key];
-    typeComposer.addResolver(createResolver({ model, typeComposer, notifier }));
+    typeComposer.addResolver(createResolver({ model, typeComposer }));
   });
 
   typeComposer.setField('isOwner', {

@@ -5,7 +5,6 @@ const { GraphQLMongoID } = require('graphql-compose-mongoose');
 function createResolver({
   model,
   typeComposer,
-  notifier,
 }) {
   const resolver = new Resolver({
     name: 'unlike',
@@ -26,12 +25,6 @@ function createResolver({
         comment.likeRefs = [];
       }
       comment.likeRefs = comment.likeRefs.filter(likeRef => likeRef !== ref);
-      notifier.notify({
-        action: 'unlike',
-        commendId: comment._id,
-        userRef: ref,
-        authorRef: comment.authorRef,
-      });
       return comment.save();
     }
   });

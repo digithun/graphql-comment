@@ -5,11 +5,10 @@ const { GraphQLMongoID } = require('graphql-compose-mongoose');
 function createResolver({
   model,
   typeComposer,
-  notifier,
 }) {
   const resolver = new Resolver({
     name: 'like',
-    type: new GraphQLNonNull(typeComposer.getType()),
+    type: typeComposer.getType(),
     args: {
       commentId: GraphQLMongoID,
     },
@@ -29,12 +28,6 @@ function createResolver({
         return comment;
       }
       comment.likeRefs.push(ref);
-      notifier.notify({
-        action: 'like',
-        commendId: comment._id,
-        userRef: ref,
-        authorRef: comment.authorRef,
-      });
       return comment.save();
     }
   });
