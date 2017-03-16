@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { composeWithMongoose } = require('graphql-compose-mongoose');
 const { composeWithConnection } = require('graphql-compose-connection');
+const { compose, addResolver, addFilterArg, addResolverMiddleware, addFields } = require('graphql-compose-recompose');
 const resolvers = require('./resolvers');
 
 const commentSchema = require('./schemas/comment');
@@ -16,36 +17,19 @@ const atSlugFilter = {
   },
 };
 
-const firstLevelSlug = next => rp => {
+const firstLevelSlugMiddleware = ({rp}, next) => {
   if (!rp.rawQuery) {
     rp.rawQuery = {};
   }
   rp.rawQuery.slug = new RegExp(`^([a-zA-Z0-9]*)$`, 'g');
-  return next(rp);
+  next();
 };
 
 function createTypeComposer(options = {}) {
   let model = options.model || mongoose.model('Comment', commentSchema);
-  const typeComposer = composeWithMongoose(model);
-
-  const extendedFindManyResolver = typeComposer
-    .getResolver('findMany')
-    .addFilterArg(atSlugFilter)
-    .wrapResolve(firstLevelSlug);
-  
-  extendedFindManyResolver.name = 'findMany';
-  typeComposer.addResolver(extendedFindManyResolver);
-
-  const extendedConnectionResolver = typeComposer
-    .getResolver('connection')
-    .addFilterArg(atSlugFilter)
-    .wrapResolve(firstLevelSlug);
-  
-  extendedConnectionResolver.name = 'connection';
-  typeComposer.addResolver(extendedConnectionResolver);
+  let typeComposer = composeWithMongoose(model);
 
   typeComposer.removeResolver('connection');
-
   composeWithConnection(typeComposer,
     {
       findResolverName: 'findMany',
@@ -70,13 +54,50 @@ function createTypeComposer(options = {}) {
       },
   });
 
-  const extendedCountResolver = typeComposer
-    .getResolver('count')
-    .addFilterArg(atSlugFilter)
-    .wrapResolve(firstLevelSlug);
-  
-  extendedCountResolver.name = 'count';
-  typeComposer.addResolver(extendedCountResolver);
+  const withResolvers = compose(...Object.keys(resolvers).map(key => {
+    const createResolver = resolvers[key];
+    return addResolver(createResolver({ model, typeComposer }));
+  }));
+
+  typeComposer = compose(
+    withResolvers,
+    addFilterArg('findMany', atSlugFilter),
+    addFilterArg('connection', atSlugFilter),
+    addFilterArg('count', atSlugFilter),
+    addResolverMiddleware('findMany', firstLevelSlugMiddleware),
+    addResolverMiddleware('connection', firstLevelSlugMiddleware),
+    addResolverMiddleware('count', firstLevelSlugMiddleware),
+    addFields({
+      isOwner: {
+        type: 'Boolean!',
+        resolve: async (source, args, context) => {
+          if (!context.getMyRef) {
+            return false;
+          }
+          const ref = await context.getMyRef();
+          return ref === source.authorRef;
+        },
+        projection: { authorRef: true },
+      },
+      likeCount: {
+        type: 'Int!',
+        resolve: source => 
+          model.aggregate({ $match: { _id: source._id, likeRefs: { $ne: null } } })
+          .append({ $project: { count: { $size: '$likeRefs' } } }).then(r => r[0] ? r[0].count : 0),
+      },
+      isLiked: {
+        type: 'Boolean!',
+        resolve: async (source, args, context) => {
+          if (!context.getMyRef) {
+            throw new Error('context.getMyRef not exists');
+          }
+          const ref = await context.getMyRef();
+          const count = await model.count({ _id: source._id, likeRefs: { $in: [ref] } });
+          return count > 0;
+        },
+      },
+    })
+  )(typeComposer);
   
   typeComposer.addRelation('comments', () => ({
     resolver: typeComposer.getResolver('findMany'),
@@ -101,42 +122,6 @@ function createTypeComposer(options = {}) {
     },
     projection: { slug: true },
   }));
-
-  Object.keys(resolvers).forEach(key => {
-    const createResolver = resolvers[key];
-    typeComposer.addResolver(createResolver({ model, typeComposer }));
-  });
-
-  typeComposer.setField('isOwner', {
-    type: 'Boolean!',
-    resolve: async (source, args, context) => {
-      if (!context.getMyRef) {
-        return false;
-      }
-      const ref = await context.getMyRef();
-      return ref === source.authorRef;
-    },
-    projection: { authorRef: true },
-  });
-
-  typeComposer.setField('likeCount', {
-    type: 'Int!',
-    resolve: source => 
-      model.aggregate({ $match: { _id: source._id, likeRefs: { $ne: null } } })
-      .append({ $project: { count: { $size: '$likeRefs' } } }).then(r => r[0] ? r[0].count : 0),
-  });
-
-  typeComposer.setField('isLiked', {
-    type: 'Boolean!',
-    resolve: async (source, args, context) => {
-      if (!context.getMyRef) {
-        throw new Error('context.getMyRef not exists');
-      }
-      const ref = await context.getMyRef();
-      const count = await model.count({ _id: source._id, likeRefs: { $in: [ref] } });
-      return count > 0;
-    },
-  });
 
   return typeComposer;
 }

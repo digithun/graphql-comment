@@ -2,14 +2,18 @@ const express = require('express');
 const graphqlHTTP = require('express-graphql');
 const mongoose = require('mongoose');
 const { GQC } = require('graphql-compose');
+const { compose, addResolverMiddleware } = require('graphql-compose-recompose');
 
 const createTypeComposer = require('./createTypeComposer');
 const helpers = require('./helpers');
 
 function buildSchema(options) {
-  let commentTC = createTypeComposer(options);
-
-  commentTC = helpers.addResolverMiddleware('like', helpers.actionTriggerMiddleware('like', console.log))(commentTC);
+  let commentTC = compose(
+    addResolverMiddleware('like', helpers.actionTriggerMiddleware('like', console.log)),
+    addResolverMiddleware('unlike', helpers.actionTriggerMiddleware('unlike', console.log)),
+    addResolverMiddleware('delete', helpers.actionTriggerMiddleware('delete', console.log)),
+    addResolverMiddleware('reply', helpers.actionTriggerMiddleware('reply', console.log))
+  )(createTypeComposer(options));
 
   GQC.rootQuery().addFields({
     comments: commentTC.getResolver('findMany'),
