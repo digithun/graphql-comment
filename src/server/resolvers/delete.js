@@ -18,9 +18,16 @@ function createResolver({
       if (!args.commentId) {
         throw new Error(`commentId is not defined`);
       }
+      if (!context.getMyRef) {
+        throw new Error('context.getMyRef not exists');
+      }
+      const ref = await context.getMyRef();
       const comment = await model.findOne({_id: args.commentId});
       if (!comment) {
         throw new Error(`comment not exists`);
+      }
+      if (ref !== comment.authorRef) {
+        throw new Error(`is not owner comment`);
       }
       await comment.delete();
       return comment.save();

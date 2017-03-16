@@ -95,9 +95,11 @@ class Comment extends React.Component {
   }
 
   onEditComment = () => {
-    this.setState({
-      showEdit: true,
-    });
+    if (this.props.isOwner) {
+      this.setState({
+        showEdit: true,
+      });
+    }
   }
 
   onToggleLikePress = () => {

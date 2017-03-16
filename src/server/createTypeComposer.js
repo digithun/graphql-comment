@@ -58,7 +58,6 @@ function createTypeComposer(options = {}) {
       sort: {
         CREATEDAT_DESC: {
           value: { createdAt: -1, _id: -1 },
-          // By these fields MUST be created COMPOUND UNIQUE index in database!
           cursorFields: ['createdAt', '_id'],
           beforeCursorQuery: (rawQuery, cursorData, resolveParams) => {
             if (!rawQuery.createdAt) rawQuery.createdAt = {};
@@ -111,6 +110,18 @@ function createTypeComposer(options = {}) {
   Object.keys(resolvers).forEach(key => {
     const createResolver = resolvers[key];
     typeComposer.addResolver(createResolver({ model, typeComposer, notifier }));
+  });
+
+  typeComposer.setField('isOwner', {
+    type: 'Boolean!',
+    resolve: async (source, args, context) => {
+      if (!context.getMyRef) {
+        return false;
+      }
+      const ref = await context.getMyRef();
+      return ref === source.authorRef;
+    },
+    projection: { authorRef: true },
   });
 
   typeComposer.setField('likeCount', {

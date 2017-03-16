@@ -198,6 +198,7 @@ class CommentList extends React.Component {
             return <Comment
               key={comment._id}
               id={comment._id}
+              isOwner={comment.isOwner}
               author={this.props.getAuthorOnComment(comment)}
               text={comment.content}
               posted={(new Date(comment.createdAt)).getTime()}

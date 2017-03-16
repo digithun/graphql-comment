@@ -115,6 +115,7 @@ CommentList.fragment = gql`
     createdAt
     likeCount
     isLiked
+    isOwner
     ...UserOnComment
   }
 `;
