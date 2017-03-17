@@ -56,6 +56,7 @@ class MentionableTextInput extends React.Component {
 
   clear() {
     // force set
+    this.textInput.clear();
     this.state.text = '';
     this.state.mentions = [];
     this.setState({
