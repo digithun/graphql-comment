@@ -120,6 +120,12 @@ class Comment extends React.Component {
     }
   }
 
+  onReply = () => {
+    if (this.props.onReply) {
+      this.props.onReply(this.props.comment);
+    }
+  }
+
   render() {
     const { posted, author, text, isLiked, likeCount } = this.props;
     const relativePostedTime = moment(new Date(posted)).fromNow();
@@ -140,6 +146,9 @@ class Comment extends React.Component {
               <Image style={style.likedIcon} source={!isLiked ? require('../img/icon-liked0.png') : require('../img/icon-like.png')} />
             </TouchableOpacity>
             <Text style={style.likedNumber}>{likeCount}</Text>
+            <TouchableOpacity onPress={this.onReply} style={{paddingLeft: 10}}>
+              <Text>Reply</Text>
+            </TouchableOpacity>
             <Text style={style.timeText}>{relativePostedTime}</Text>
           </View>
         </View>

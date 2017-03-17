@@ -198,6 +198,7 @@ class CommentList extends React.Component {
             return <Comment
               key={comment._id}
               id={comment._id}
+              comment={comment}
               isOwner={comment.isOwner}
               author={this.props.getAuthorOnComment(comment)}
               text={comment.content}
@@ -207,6 +208,7 @@ class CommentList extends React.Component {
               onLike={this.props.onLike}
               onUnlike={this.props.onUnlike}
               onDelete={this.onDeleteComment}
+              onReply={this.props.onReply}
             />;
           }}
           renderFooter={this.renderLoadMore}

@@ -16,6 +16,7 @@ import gql from 'graphql-tag';
 import KeyboardAvoidingViewCustom from './KeyboardAvoidingViewCustom';
 import CommentHeader from './CommentHeader';
 import CommentListA from './CommentList';
+import MentionableTextInput from './MentionableTextInput';
 import MockData from '../MockData';
 
 const { height, width } = Dimensions.get('window');
@@ -64,6 +65,13 @@ class CommentList extends React.Component {
     }
   }
 
+  onReply = (comment) => {
+    this.textInput.replyMention({
+      name: this.props.getAuthorOnComment(comment).name,
+      ref: comment.authorRef,
+    });
+  }
+
   render() {
     return (
       <View style={{ flex: 1, marginTop: 20 }}>
@@ -80,19 +88,19 @@ class CommentList extends React.Component {
           onLike={this.props.likeComment}
           onUnlike={this.props.unlikeComment}
           onDeleteComment={this.props.deleteComment}
+          onReply={this.onReply}
         />
 
         <KeyboardAvoidingViewCustom>
           <View style={{ flexDirection: 'row', alignItems: 'center', width, padding: 5, borderTopWidth: 1, borderTopColor: '#C8C8D0', backgroundColor: '#FFFFFF' }}>
             <Image style={{ width: 30, height: 20, resizeMode: 'stretch' }} source={require('../img/icon-camera.png')} />
             <View style={{ marginLeft: 10, flexDirection: 'row', alignItems: 'center', borderColor: '#CACBD2', borderWidth: 1, borderRadius: 5, height: 35, width: this.width - 50 }}>
-              <TextInput
+              <MentionableTextInput
+                multiline={true}
                 ref={node => this.textInput = node}
                 style={{ marginLeft: 10, height: 35, width: 280 }}
-                onEndEditing={() => console.log('end edit ;)')}
                 onChangeText={text => this.setState({ textInput: text })}
                 placeholder="Write a comment..."
-                value={this.state.textInput}
               />
               {
                 this.state.textInput.length > 0 ?
