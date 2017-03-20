@@ -133,7 +133,7 @@ class Comment extends React.Component {
     mentions.sort((m1, m2) => m2.position - m1.position);
     const splited = mentions.reduce((acc, mention, i) => {
       const idx = mention.position;
-      return [acc[0].slice(0, idx),  <Text key={i}>{mention.text}</Text>, acc[0].slice(idx + 1), ...acc.slice(1)];
+      return [acc[0].slice(0, idx),  <Text key={i} onPress={null} style={{color: 'blue'}}>{mention.text}</Text>, acc[0].slice(idx + 1), ...acc.slice(1)];
     }, [text]);
     return splited;
   }
