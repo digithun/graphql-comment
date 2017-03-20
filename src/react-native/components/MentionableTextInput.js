@@ -11,15 +11,35 @@ import TextInputWithAction from './TextInputWithAction';
 
 const mentionRegex = /^@/;
 
-function mentionReducer(mentions = [], action) {
+const isIntersectWithMention = (mention, start, end) => {
+  const startPos = mention.startAt;
+  const endPos = mention.startAt + mention.length - 1;
+  let s1 = startPos;
+  let e1 = endPos;
+  let s2 = start;
+  let e2 = end;
+  let is = s1 > s2 ? s1 : s2;
+  let ie = e1 > e2 ? e2 : e1;
+  return is > ie;
+}
+
+function mentionReducer({
+  text = '',
+  mentions = [],
+}, action) {
   if (action.type === 'ADD_MENTION') {
     const mention = action.payload;
-    return [...mentions, mention];
+    return {
+      text: '',
+      mentions: [...mentions, mention],
+    };
   }
   if (action.type === 'INSERT_TEXT') {
-    const { at, text } = action.payload;
-    const length = text.length;
-    return mentions
+    const { at } = action.payload;
+    const length = action.payload.text.length;
+    return {
+      text: text,
+      mentions: mentions
       .filter(mention => {
         const startPos = mention.startAt;
         const endPos = mention.startAt + mention.length - 1;
@@ -34,22 +54,17 @@ function mentionReducer(mentions = [], action) {
           };
         }
         return mention;
-      });
+      }),
+    }
   }
   if (action.type === 'REMOVE_TEXT') {
     const { at, length } = action.payload;
     if (length != 0) {
-      return mentions
+      return {
+        text,
+        mentions: mentions
         .filter(mention => {
-          const startPos = mention.startAt;
-          const endPos = mention.startAt + mention.length - 1;
-          let s1 = startPos;
-          let e1 = endPos;
-          let s2 = at;
-          let e2 = at + length - 1;
-          let is = s1 > s2 ? s1 : s2;
-          let ie = e1 > e2 ? e2 : e1;
-          return is > ie;
+          return isIntersectWithMention(mention, at, at + length - 1);
         })
         .map(mention => {
           const startPos = mention.startAt;
@@ -60,13 +75,17 @@ function mentionReducer(mentions = [], action) {
             };
           }
           return mention;
-        });
+        }),
+      }
     }
   }
   if (action.type === 'CLEAR') {
-    return [];
+    return {
+      text: '',
+      mentions: [],
+    };
   }
-  return mentions;
+  return { text, mentions };
 }
 
 class MentionableTextInput extends React.Component {
@@ -82,9 +101,11 @@ class MentionableTextInput extends React.Component {
       _actions = [actions];
     }
     if (this.props.onMentionsChange) {
-      this.props.onMentionsChange(_actions.reduce((mentions, action) => {
-        return mentionReducer(mentions, action);
-      }, this.props.mentions));
+      const newState = _actions.reduce((state, action) => {
+        return mentionReducer(state, action);
+      }, { text: this.props.value, mentions: this.props.mentions });
+      this.props.onMentionsChange(newState.mentions);
+      // this.props.onTextChange(newState.text);
     }
   }
 

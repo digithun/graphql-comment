@@ -26,7 +26,8 @@
     "node-fetch": "^1.6.3",
     "react-apollo": "^1.0.0-rc.2",
     "react-native-invertible-scroll-view": "^1.0.0",
-    "recompose": "^0.22.0"
+    "recompose": "^0.22.0",
+    "text-diff": "^1.0.1"
   },
   "peerDependencies": {
     "graphql-compose": "^1.14.0",

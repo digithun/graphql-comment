@@ -5,39 +5,39 @@ import {
   TextInput,
 } from 'react-native';
 
+const Diff = require('text-diff');
+const diff = new Diff();
+
 function textActions(oldText, newText) {
-  let longestFirstIdx = 0;
-  while (longestFirstIdx < oldText.length && longestFirstIdx < newText.length) {
-    if (oldText[longestFirstIdx] !== newText[longestFirstIdx]) {
-      break;
+  const diffs = diff.main(oldText, newText);
+  diff.cleanupSemantic(diffs);
+  let curLength = 0;
+  return diffs.reduce((acc, diff) => {
+    if (diff[0] === 0) {
+      curLength += diff[1].length;
+      return acc;
     }
-    longestFirstIdx += 1;
-  }
-  let longestLastIdx = 0;
-  let remainingOldText = oldText.slice(longestFirstIdx).split('').reverse().join('');
-  let remainingNewText = newText.slice(longestFirstIdx).split('').reverse().join('');
-  while (longestLastIdx < remainingOldText.length && longestLastIdx < remainingNewText.length) {
-    if (remainingOldText[longestLastIdx] !== remainingNewText[longestLastIdx]) {
-      break;
+    if (diff[0] === -1) {
+      return [...acc, {
+        type: 'REMOVE_TEXT',
+        payload: {
+          at: curLength,
+          length: diff[1].length,
+        },
+      }];
     }
-    longestLastIdx += 1;
-  }
-  return [
-    {
-      type: 'REMOVE_TEXT',
-      payload: {
-        at: longestFirstIdx,
-        length: oldText.length - (longestFirstIdx + longestLastIdx),
-      },
-    },
-    {
-      type: 'INSERT_TEXT',
-      payload: {
-        at: longestFirstIdx,
-        text: newText.slice(longestFirstIdx, longestLastIdx === 0 ? undefined : -longestLastIdx),
-      },
-    },
-  ];
+    if (diff[0] === 1) {
+      curLength += diff[1].length;
+      return [...acc, {
+        type: 'INSERT_TEXT',
+        payload: {
+          at: curLength - diff[1].length,
+          text: diff[1],
+        },
+      }];
+    }
+    return acc;
+  }, []);
 }
 
 class TextInputWithAction extends React.Component {
