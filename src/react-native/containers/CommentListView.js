@@ -41,8 +41,8 @@ function createCommentContainer(options = {}) {
   `;
 
   const replyMutation = gql`
-    mutation Reply($discussionRef: String!, $content: JSON!){
-      reply(discussionRef: $discussionRef, content: $content) {
+    mutation Reply($discussionRef: String!, $content: JSON!, $mentions: [MentionInputType]){
+      reply(discussionRef: $discussionRef, content: $content, mentions: $mentions) {
         ...CommentListView
       }
     }
@@ -136,11 +136,12 @@ function createCommentContainer(options = {}) {
     replyMutation,
     {
       props: ({ ownProps, mutate }) => ({
-        reply: (content) => {
+        reply: ({content, mentions}) => {
           return mutate({
             variables: {
               discussionRef: ownProps.discussionRef,
-              content: content,
+              content,
+              mentions,
             },
             optimisticResponse: {
               __typename: 'Mutation',

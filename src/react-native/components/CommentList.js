@@ -199,6 +199,7 @@ class CommentList extends React.Component {
               key={comment._id}
               id={comment._id}
               comment={comment}
+              mentions={comment.mentions}
               isOwner={comment.isOwner}
               author={this.props.getAuthorOnComment(comment)}
               text={comment.content}

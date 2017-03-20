@@ -44,7 +44,14 @@ class CommentList extends React.Component {
   }
   
   onSendMessage = (msg) => {
-    this.props.reply(msg);
+    this.props.reply({
+      content: msg,
+      mentions: this.state.mentions.map(mention => ({
+        startAt: mention.startAt,
+        text: mention.text,
+        userRef: mention.userRef,
+      })),
+    });
     this.textInput.clear();
     this.setState({
       textInput: '',
@@ -65,12 +72,12 @@ class CommentList extends React.Component {
   onReply = (comment) => {
     const mentionText = `${this.props.getAuthorOnComment(comment).name}`;
     this.setState({
-      ref: comment.authorRef,
       textInput: `${mentionText} `,
       mentions: [{
         startAt: 0,
         text: mentionText,
         length: mentionText.length,
+        userRef: comment.authorRef,
       }],
     });
   }
@@ -130,6 +137,10 @@ CommentList.fragment = gql`
     likeCount
     isLiked
     isOwner
+    mentions {
+      position
+      text
+    }
     ...UserOnComment
   }
 `;

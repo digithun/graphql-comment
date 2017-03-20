@@ -21,7 +21,9 @@ const firstLevelSlugMiddleware = ({rp}, next) => {
   if (!rp.rawQuery) {
     rp.rawQuery = {};
   }
-  rp.rawQuery.slug = new RegExp(`^([a-zA-Z0-9]*)$`, 'g');
+  if (!rp.rawQuery.slug) {
+    rp.rawQuery.slug = new RegExp(`^([a-zA-Z0-9]*)$`, 'g');
+  }
   next();
 };
 

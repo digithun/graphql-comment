@@ -11,6 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import moment from 'moment';
+import clone from 'lodash/clone';
 
 const style = StyleSheet.create({
   container: {
@@ -126,6 +127,17 @@ class Comment extends React.Component {
     }
   }
 
+  renderTextWithMentions() {
+    let text = this.props.text;
+    let mentions = clone(this.props.mentions);
+    mentions.sort((m1, m2) => m2.position - m1.position);
+    const splited = mentions.reduce((acc, mention, i) => {
+      const idx = mention.position;
+      return [acc[0].slice(0, idx),  <Text key={i}>{mention.text}</Text>, acc[0].slice(idx + 1), ...acc.slice(1)];
+    }, [text]);
+    return splited;
+  }
+
   render() {
     const { posted, author, text, isLiked, likeCount } = this.props;
     const relativePostedTime = moment(new Date(posted)).fromNow();
@@ -139,7 +151,7 @@ class Comment extends React.Component {
           </View>
           {this.state.showEdit ? <CommentEditor onDelete={this.onDelete} onCancel={this.onCancel}/> : null}
           <View>
-            <Text style={style.commentText}>{text}</Text>
+            <Text style={style.commentText}>{this.renderTextWithMentions()}</Text>
           </View>
           <View style={style.footerContainer}>
             <TouchableOpacity onPress={this.onToggleLikePress}>
