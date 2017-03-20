@@ -5,163 +5,105 @@ import {
   TextInput,
 } from 'react-native';
 
+import withReducer from 'recompose/withReducer';
+
+import TextInputWithAction from './TextInputWithAction';
+
 const mentionRegex = /^@/;
+
+function mentionReducer(mentions = [], action) {
+  if (action.type === 'ADD_MENTION') {
+    const mention = action.payload;
+    return [...mentions, mention];
+  }
+  if (action.type === 'INSERT_TEXT') {
+    const { at, text } = action.payload;
+    const length = text.length;
+    return mentions
+      .filter(mention => {
+        const startPos = mention.startAt;
+        const endPos = mention.startAt + mention.length - 1;
+        return !(startPos < at && at <= endPos);
+      })
+      .map(mention => {
+        const startPos = mention.startAt;
+        if (startPos >= at) {
+          return {
+            ...mention,
+            startAt: mention.startAt + length,
+          };
+        }
+        return mention;
+      });
+  }
+  if (action.type === 'REMOVE_TEXT') {
+    const { at, length } = action.payload;
+    if (length != 0) {
+      return mentions
+        .filter(mention => {
+          const startPos = mention.startAt;
+          const endPos = mention.startAt + mention.length - 1;
+          let s1 = startPos;
+          let e1 = endPos;
+          let s2 = at;
+          let e2 = at + length - 1;
+          let is = s1 > s2 ? s1 : s2;
+          let ie = e1 > e2 ? e2 : e1;
+          return is > ie;
+        })
+        .map(mention => {
+          const startPos = mention.startAt;
+          if (startPos >= at) {
+            return {
+              ...mention,
+              startAt: mention.startAt - length,
+            };
+          }
+          return mention;
+        });
+    }
+  }
+  if (action.type === 'CLEAR') {
+    return [];
+  }
+  return mentions;
+}
 
 class MentionableTextInput extends React.Component {
   constructor(...args) {
     super(...args);
-    
-    this.state = {
-      mentions: [],
-      mentionCache: [],
-      text: '',
-    };
 
-    this.onChangeText = this.onChangeText.bind(this);
+    this.activeMentionAction = this.activeMentionAction.bind(this);
   }
 
-  onChangeText(text) {
-    const actions = this.oneTextActions(this.state.text, text);
-    let newMention = this.state.mentions;
-    actions.forEach(action => {
-      if (action.type === 'insert') {
-        const { at } = action.payload;
-        newMention = newMention.filter(mention => {
-          return !this.isInMention(mention, at);
-        });
-      }
-      if (action.type === 'remove') {
-        const { at, length } = action.payload;
-        if (length != 0) {
-          newMention = newMention.filter(mention => {
-            let s1 = mention.startPos;
-            let e1 = mention.endPos;
-            let s2 = at;
-            let e2 = at + length - 1;
-            let is = s1 > s2 ? s1 : s2;
-            let ie = e1 > e2 ? e2 : e1;
-            return is > ie;
-          });
-        }
-      }
-    });
-    this.setState({
-      text,
-      mentions: newMention,
-    });
-    if (this.props.onChangeText) {
-      this.props.onChangeText(text);
+  activeMentionAction(actions) {
+    let _actions= actions;
+    if (actions.length === undefined) {
+      _actions = [actions];
+    }
+    if (this.props.onMentionsChange) {
+      this.props.onMentionsChange(_actions.reduce((mentions, action) => {
+        return mentionReducer(mentions, action);
+      }, this.props.mentions));
     }
   }
 
   clear() {
-    // force set
     this.textInput.clear();
-    this.state.text = '';
-    this.state.mentions = [];
-    this.setState({
-      text: '',
-      mentions: [],
-    });
-  }
-
-  addMention({ name, at, ref }) {
-    const addText = `@${name}`;
-    this.setState({
-      mentions: [...this.state.mentions, {
-        ref,
-        startPos: this.state.text.length,
-        endPos: this.state.text.length + addText.length - 1,
-      }],
-      text: this.state.text.slice(0, at) + addText + this.state.text.slice(at),
-    });
-  }
-
-  replyMention({ name, ref }) {
-    const addText = `@${name} `;
-    this.setState({
-      mentions: [{
-        ref,
-        startPos: 0,
-        endPos: addText.length - 2,
-      }],
-      text: addText,
+    this.activeMentionAction({
+      type: 'CLEAR',
     });
   }
 
   isInMention(mention, pos) {
-    return mention.startPos <= pos && pos <= mention.endPos;
-  }
-
-  oneTextActions(oldText, newText) {
-    let longestFirstIdx = 0;
-    while (longestFirstIdx < oldText.length && longestFirstIdx < newText.length) {
-      if (oldText[longestFirstIdx] !== newText[longestFirstIdx]) {
-        break;
-      }
-      longestFirstIdx += 1;
-    }
-    let longestLastIdx = 0;
-    let remainingOldText = oldText.slice(longestFirstIdx).split('').reverse().join();
-    let remainingNewText = newText.slice(longestFirstIdx).split('').reverse().join();
-    while (longestLastIdx < remainingOldText.length && longestLastIdx < remainingNewText.length) {
-      if (remainingOldText[longestLastIdx] !== remainingNewText[longestLastIdx]) {
-        break;
-      }
-      longestLastIdx += 1;
-    }
-    return [
-      {
-        type: 'remove',
-        payload: {
-          at: longestFirstIdx,
-          length: oldText.length - (longestFirstIdx + longestLastIdx),
-        },
-      },
-      {
-        type: 'insert',
-        payload: {
-          at: longestFirstIdx,
-          text: newText.slice(longestFirstIdx, longestLastIdx === 0 ? undefined : -longestLastIdx),
-        },
-      },
-    ];
+    const startPos = mention.startAt;
+    const endPos = mention.startAt + mention.length - 1;
+    return startPos <= pos && pos <= endPos;
   }
 
   renderStyledMentions() {
-    // const text = this.state.text;
-    // let idx = 0;
-    // let styled = text.split(' ').map(word => {
-    //   if (mentionRegex.test(word)) {
-    //     const styled = <Text key={idx} style={{color: 'blue'}}>{word}</Text>;
-    //     const mention = this.state.mentions.find(mention => mention.idx === idx);
-    //     idx = idx + 1;
-    //     if (!!mention) {
-    //       return styled;
-    //     }
-    //     return word;
-    //   }
-    //   else {
-    //     return word;
-    //   }
-    // });
-    // let joined = [];
-    // for (let i = 0; i < styled.length; i++) {
-    //   joined.push(styled[i]);
-    //   if (i + 1 !== styled.length) {
-    //     joined.push(' ');
-    //   }
-    // }
-    // return joined;
-    // console.log(this.state.textObjects)
-    // return this.state.textObjects.map(obj => {
-    //   if (obj.type === 'text') {
-    //     return obj.text;
-    //   }
-    //   return null;
-    // });
-    return this.state.text.split('').map((t, idx) => {
-      const isMention = this.state.mentions.reduce((acc, mention) => {
+    return this.props.value.split('').map((t, idx) => {
+      const isMention = this.props.mentions.reduce((acc, mention) => {
         return this.isInMention(mention, idx) || acc;
       }, false);
       if (isMention) {
@@ -172,16 +114,17 @@ class MentionableTextInput extends React.Component {
   }
 
   render() {
-    
     return (
-      <TextInput
+      <TextInputWithAction
         {...this.props}
         ref={node => this.textInput = node}
+        onActions={this.activeMentionAction}
         multiline={true}
-        onChangeText={this.onChangeText}
+        value={undefined}
+        oldValue={this.props.value}
       >
         {this.renderStyledMentions()}
-      </TextInput>
+      </TextInputWithAction>
     );
   }
 }

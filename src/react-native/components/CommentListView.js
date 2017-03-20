@@ -35,15 +35,12 @@ class CommentList extends React.Component {
     this.state = {
       textInput: '',
       isPosting: false,
-      comments: [],
+      mentions: [],
     };
   }
 
   componentWillMount() {
     this.width = width;
-    this.setState({
-      comments: MockData,
-    });
   }
   
   onSendMessage = (msg) => {
@@ -66,9 +63,15 @@ class CommentList extends React.Component {
   }
 
   onReply = (comment) => {
-    this.textInput.replyMention({
-      name: this.props.getAuthorOnComment(comment).name,
+    const mentionText = `${this.props.getAuthorOnComment(comment).name}`;
+    this.setState({
       ref: comment.authorRef,
+      textInput: `${mentionText} `,
+      mentions: [{
+        startAt: 0,
+        text: mentionText,
+        length: mentionText.length,
+      }],
     });
   }
 
@@ -100,6 +103,9 @@ class CommentList extends React.Component {
                 ref={node => this.textInput = node}
                 style={{ marginLeft: 10, height: 35, width: 280 }}
                 onChangeText={text => this.setState({ textInput: text })}
+                onMentionsChange={mentions => this.setState({ mentions })}
+                mentions={this.state.mentions}
+                value={this.state.textInput}
                 placeholder="Write a comment..."
               />
               {

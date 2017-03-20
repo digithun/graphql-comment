@@ -24,7 +24,8 @@
     "mongoose-delete": "^0.3.4",
     "node-fetch": "^1.6.3",
     "react-apollo": "^1.0.0-rc.2",
-    "react-native-invertible-scroll-view": "^1.0.0"
+    "react-native-invertible-scroll-view": "^1.0.0",
+    "recompose": "^0.22.0"
   },
   "peerDependencies": {
     "graphql-compose": "^1.14.0",
