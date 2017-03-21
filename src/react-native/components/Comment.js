@@ -13,6 +13,8 @@ import {
 import moment from 'moment';
 import clone from 'lodash/clone';
 
+import { denormalize } from '../../common/mention';
+
 const style = StyleSheet.create({
   container: {
     marginLeft: 10,
@@ -128,14 +130,12 @@ class Comment extends React.Component {
   }
 
   renderTextWithMentions() {
-    let text = this.props.text;
-    let mentions = clone(this.props.mentions);
-    mentions.sort((m1, m2) => m2.position - m1.position);
-    const splited = mentions.reduce((acc, mention, i) => {
-      const idx = mention.position;
-      return [acc[0].slice(0, idx),  <Text key={i} onPress={null} style={{color: 'blue'}}>{mention.text}</Text>, acc[0].slice(idx + 1), ...acc.slice(1)];
-    }, [text]);
-    return splited;
+    return denormalize(this.props.text).map((obj, idx) => {
+      if (obj.type === 'mention') {
+        return <Text key={idx} onPress={null} style={{color: 'blue'}}>{obj.text}</Text>;
+      }
+      return obj;
+    });
   }
 
   render() {

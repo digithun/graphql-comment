@@ -6,84 +6,60 @@ import {
 } from 'react-native';
 
 import withReducer from 'recompose/withReducer';
+import flatten from 'lodash/flatten';
+
+import { denormalize, normalize, cleanText } from '../../common/mention';
+import { min, max } from '../../common/utils';
 
 import TextInputWithAction from './TextInputWithAction';
 
-const isIntersectWithMention = (mention, start, end) => {
-  const startPos = mention.startAt;
-  const endPos = mention.startAt + mention.length - 1;
-  let s1 = startPos;
-  let e1 = endPos;
-  let s2 = start;
-  let e2 = end;
-  let is = s1 > s2 ? s1 : s2;
-  let ie = e1 > e2 ? e2 : e1;
-  return is > ie;
-}
-
-function mentionReducer({
-  text = '',
-  mentions = [],
-}, action) {
-  if (action.type === 'ADD_MENTION') {
-    const mention = action.payload;
-    return {
-      text,
-      mentions: [...mentions, mention],
-    };
-  }
+function mentionReducer(text, action) {
+  let objArray = denormalize(text);
   if (action.type === 'INSERT_TEXT') {
-    const { at } = action.payload;
-    const length = action.payload.text.length;
-    return {
-      text: action.payload.changedText,
-      mentions: mentions
-      .filter(mention => {
-        const startPos = mention.startAt;
-        const endPos = mention.startAt + mention.length - 1;
-        return !(startPos < at && at <= endPos);
-      })
-      .map(mention => {
-        const startPos = mention.startAt;
-        if (startPos >= at) {
-          return {
-            ...mention,
-            startAt: mention.startAt + length,
-          };
-        }
-        return mention;
-      }),
+    const { at, text } = action.payload;
+    let accLength = 0;
+    let isInserted = false;
+    objArray = flatten(objArray.map(obj => {
+      const curPos = accLength;
+      accLength += obj.length; 
+      if (curPos < at && at < curPos + obj.length) {
+        const objText = obj.text ? obj.text : obj;
+        isInserted = true;
+        return objText.slice(0, at - curPos) + text + objText.slice(at - curPos);
+      }
+      if (curPos === at) {
+        isInserted = true;
+        return [text, obj];
+      }
+      return obj;
+    }));
+    if (!isInserted) {
+      objArray.push(text);
     }
+    return normalize(objArray);
   }
   if (action.type === 'REMOVE_TEXT') {
     const { at, length } = action.payload;
-    if (length != 0) {
-      return {
-        text: action.payload.changedText,
-        mentions: mentions
-        .filter(mention => {
-          return isIntersectWithMention(mention, at, at + length - 1);
-        })
-        .map(mention => {
-          const startPos = mention.startAt;
-          if (startPos >= at) {
-            return {
-              ...mention,
-              startAt: mention.startAt - length,
-            };
-          }
-          return mention;
-        }),
+    let accLength = 0;
+    objArray = objArray.map(obj => {
+      const curPos = accLength;
+      accLength += obj.length; 
+      let start = max(curPos, at);
+      let end = min(curPos + obj.length - 1, at + length - 1);
+      if (start <= end) {
+        if (obj.type === 'mention') {
+          return '';
+        }
+        return obj.slice(0, start - curPos) + obj.slice(end - curPos + 1);
       }
-    }
+      return obj;
+    });
+    return normalize(objArray);
   }
   if (action.type === 'CLEAR') {
-    return {
-      text: '',
-      mentions: [],
-    };
+    return '';
   }
-  return { text, mentions };
+  return text;
 }
 
 class MentionableTextInput extends React.Component {
@@ -120,14 +96,11 @@ class MentionableTextInput extends React.Component {
   }
 
   renderStyledMentions() {
-    return this.props.model.text.split('').map((t, idx) => {
-      const isMention = this.props.model.mentions.reduce((acc, mention) => {
-        return this.isInMention(mention, idx) || acc;
-      }, false);
-      if (isMention) {
-        return <Text key={idx} style={{color: 'blue'}}>{t}</Text>;
+    return denormalize(this.props.model).map((obj, idx) => {
+      if (typeof obj === 'string') {
+        return obj;
       }
-      return t;
+      return <Text key={idx} style={{color: 'blue'}}>{obj.text}</Text>;
     });
   }
 
@@ -139,7 +112,7 @@ class MentionableTextInput extends React.Component {
         onActions={this.activeMentionAction}
         multiline={true}
         value={undefined}
-        oldValue={this.props.model.text}
+        oldValue={cleanText(this.props.model)}
         onChangeText={null}
       >
         {this.renderStyledMentions()}

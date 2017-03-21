@@ -9,12 +9,6 @@ function createResolver({
   model,
   typeComposer,
 }) {
-  const mentionITC = InputTypeComposer.create('MentionInputType');
-  mentionITC.addFields({
-    startAt: 'Int!',
-    text: 'String!',
-    userRef: 'String!',
-  });
   const resolver = new Resolver({
     name: 'reply',
     type: new GraphQLNonNull(typeComposer.getType()),
@@ -22,10 +16,6 @@ function createResolver({
       discussionRef: 'String',
       commentId: GraphQLMongoID,
       content: 'JSON!',
-      mentions: {
-        type: [mentionITC.getType()],
-        defaultValue: [],
-      },
     },
     resolve: async ({ source, args, context }) => {
       let slugConcat = '';
@@ -44,14 +34,11 @@ function createResolver({
         fullSlugConcat = comment.fullSlug + '/';
       }
 
-      const { content, mentions } = normallizeContentAndMentions({content: args.content, mentions: args.mentions});
-
       const comment = await model.create({
         discussionRef: args.discussionRef,
         slug: null,
         fullSlug: null,
-        content,
-        mentions,
+        content: args.content,
         authorRef,
       });
 

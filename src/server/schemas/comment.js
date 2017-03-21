@@ -8,11 +8,6 @@ const commentSchema = Schema({
   content: {},
   authorRef: String, // user reference
   likeRefs: [{ type: String }], // user reference
-  mentions: [{
-    position: Number,
-    text: String,
-    userRef: String,
-  }],
 }, {
   timestamps: true,
 });

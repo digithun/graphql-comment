@@ -33,10 +33,7 @@ class CommentList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      inputModel: {
-        text: '',
-        mentions: [],
-      },
+      inputModel: '',
       isPosting: false,
     };
   }
@@ -46,14 +43,7 @@ class CommentList extends React.Component {
   }
   
   onSendMessage = () => {
-    this.props.reply({
-      content: this.state.inputModel.text,
-      mentions: this.state.inputModel.mentions.map(mention => ({
-        startAt: mention.startAt,
-        text: mention.text,
-        userRef: mention.userRef,
-      })),
-    });
+    this.props.reply(this.state.inputModel);
     this.textInput.clear();
     Keyboard.dismiss();
   }
@@ -68,17 +58,9 @@ class CommentList extends React.Component {
   }
 
   onReply = (comment) => {
-    const mentionText = `${this.props.getAuthorOnComment(comment).name}`;
+    const author = this.props.getAuthorOnComment(comment);
     this.setState({
-      inputModel: {
-        text: `${mentionText} `,
-        mentions: [{
-          startAt: 0,
-          text: mentionText,
-          length: mentionText.length,
-          userRef: comment.authorRef,
-        }],
-      },
+      inputModel: `@{${author.name}}(${author.id}) `,
     });
   }
 
@@ -115,7 +97,7 @@ class CommentList extends React.Component {
                 placeholder="Write a comment..."
               />
               {
-                this.state.inputModel.text.length > 0 ?
+                this.state.inputModel.length > 0 ?
                   <TouchableOpacity onPress={this.onSendMessage}>
                     <Image style={{ width: 20, height: 20, resizeMode: 'stretch' }} source={require('../img/icon-message.png')} />
                   </TouchableOpacity> : null
@@ -136,10 +118,6 @@ CommentList.fragment = gql`
     likeCount
     isLiked
     isOwner
-    mentions {
-      position
-      text
-    }
     ...UserOnComment
   }
 `;
