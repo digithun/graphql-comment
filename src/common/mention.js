@@ -14,10 +14,10 @@ function denormalize(text) {
         id: matches[2],
         length: matches[1].length,
       },
-      ...denormalize(text.slice(lastIndex)),
+      denormalize(text.slice(lastIndex))
     );
   }
-  return [text];
+  return [renderText(text)];
 }
 
 function cleanText(text) {
@@ -27,13 +27,23 @@ function cleanText(text) {
 function normalize(arr) {
   if (!arr.length) return [];
   if (typeof arr[0] === 'string') {
-    return arr[0] + normalize(arr.slice(1));
+    return escape(arr[0]) + normalize(arr.slice(1));
   }
   return `@{${arr[0].text}}(${arr[0].id})` + normalize(arr.slice(1));
+}
+
+function escape(text) {
+  return text.replace(/#/g, '##').replace(/@/g, '@#');
+}
+
+function renderText(text) {
+  return text.replace(/@#/g, '@').replace(/##/g, '#');
 }
 
 module.exports = {
   denormalize,
   normalize,
   cleanText,
+  escape,
+  renderText,
 };
