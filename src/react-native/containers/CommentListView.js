@@ -139,7 +139,7 @@ function createCommentContainer(options = {}) {
     {
       props: ({ ownProps, mutate }) => ({
         reply: ({content, mentions}) => {
-          const normallized = normallizeContentAndMentions(content, mentions);
+          const normallized = normallizeContentAndMentions({content, mentions});
           return mutate({
             variables: {
               discussionRef: ownProps.discussionRef,

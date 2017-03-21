@@ -33,9 +33,11 @@ class CommentList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      textInput: '',
+      inputModel: {
+        text: '',
+        mentions: [],
+      },
       isPosting: false,
-      mentions: [],
     };
   }
 
@@ -43,42 +45,40 @@ class CommentList extends React.Component {
     this.width = width;
   }
   
-  onSendMessage = (msg) => {
+  onSendMessage = () => {
     this.props.reply({
-      content: msg,
-      mentions: this.state.mentions.map(mention => ({
+      content: this.state.inputModel.text,
+      mentions: this.state.inputModel.mentions.map(mention => ({
         startAt: mention.startAt,
         text: mention.text,
         userRef: mention.userRef,
       })),
     });
     this.textInput.clear();
-    this.setState({
-      textInput: '',
-      isPosting: true,
-    });
     Keyboard.dismiss();
   }
 
   onPostSuccess = () => {
     if (this.state.isPosting) {
       this.setState({
-        textInput: '',
         isPosting: false,
       });
+      this.textInput.clear();
     }
   }
 
   onReply = (comment) => {
     const mentionText = `${this.props.getAuthorOnComment(comment).name}`;
     this.setState({
-      textInput: `${mentionText} `,
-      mentions: [{
-        startAt: 0,
-        text: mentionText,
-        length: mentionText.length,
-        userRef: comment.authorRef,
-      }],
+      inputModel: {
+        text: `${mentionText} `,
+        mentions: [{
+          startAt: 0,
+          text: mentionText,
+          length: mentionText.length,
+          userRef: comment.authorRef,
+        }],
+      },
     });
   }
 
@@ -109,15 +109,14 @@ class CommentList extends React.Component {
                 multiline={true}
                 ref={node => this.textInput = node}
                 style={{ marginLeft: 10, height: 35, width: 280 }}
-                onChangeText={text => this.setState({ textInput: text })}
-                onMentionsChange={mentions => this.setState({ mentions })}
+                onChange={value => this.setState({ inputModel: value })}
                 mentions={this.state.mentions}
-                value={this.state.textInput}
+                model={this.state.inputModel}
                 placeholder="Write a comment..."
               />
               {
-                this.state.textInput.length > 0 ?
-                  <TouchableOpacity onPress={() => this.onSendMessage(this.state.textInput)}>
+                this.state.inputModel.text.length > 0 ?
+                  <TouchableOpacity onPress={this.onSendMessage}>
                     <Image style={{ width: 20, height: 20, resizeMode: 'stretch' }} source={require('../img/icon-message.png')} />
                   </TouchableOpacity> : null
               }

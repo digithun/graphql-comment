@@ -23,6 +23,7 @@ function textActions(oldText, newText) {
         payload: {
           at: curLength,
           length: diff[1].length,
+          changedText: newText,
         },
       }];
     }
@@ -33,6 +34,7 @@ function textActions(oldText, newText) {
         payload: {
           at: curLength - diff[1].length,
           text: diff[1],
+          changedText: newText,
         },
       }];
     }

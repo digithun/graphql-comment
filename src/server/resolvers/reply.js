@@ -44,7 +44,7 @@ function createResolver({
         fullSlugConcat = comment.fullSlug + '/';
       }
 
-      const { content, mentions } = normallizeContentAndMentions(args.content, args.mentions);
+      const { content, mentions } = normallizeContentAndMentions({content: args.content, mentions: args.mentions});
 
       const comment = await model.create({
         discussionRef: args.discussionRef,

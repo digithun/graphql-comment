@@ -1,4 +1,4 @@
-function normallizeContentAndMentions(content, mentions) {
+function normallizeContentAndMentions({content, mentions}) {
   let newMentions = mentions.sort((m1, m2) => m2.startAt - m1.startAt)
   let newContent = content;
   newMentions.forEach(mention => {

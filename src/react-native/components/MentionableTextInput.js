@@ -9,8 +9,6 @@ import withReducer from 'recompose/withReducer';
 
 import TextInputWithAction from './TextInputWithAction';
 
-const mentionRegex = /^@/;
-
 const isIntersectWithMention = (mention, start, end) => {
   const startPos = mention.startAt;
   const endPos = mention.startAt + mention.length - 1;
@@ -30,7 +28,7 @@ function mentionReducer({
   if (action.type === 'ADD_MENTION') {
     const mention = action.payload;
     return {
-      text: '',
+      text,
       mentions: [...mentions, mention],
     };
   }
@@ -38,7 +36,7 @@ function mentionReducer({
     const { at } = action.payload;
     const length = action.payload.text.length;
     return {
-      text: text,
+      text: action.payload.changedText,
       mentions: mentions
       .filter(mention => {
         const startPos = mention.startAt;
@@ -61,7 +59,7 @@ function mentionReducer({
     const { at, length } = action.payload;
     if (length != 0) {
       return {
-        text,
+        text: action.payload.changedText,
         mentions: mentions
         .filter(mention => {
           return isIntersectWithMention(mention, at, at + length - 1);
@@ -100,12 +98,11 @@ class MentionableTextInput extends React.Component {
     if (actions.length === undefined) {
       _actions = [actions];
     }
-    if (this.props.onMentionsChange) {
-      const newState = _actions.reduce((state, action) => {
-        return mentionReducer(state, action);
-      }, { text: this.props.value, mentions: this.props.mentions });
-      this.props.onMentionsChange(newState.mentions);
-      // this.props.onTextChange(newState.text);
+    const newState = _actions.reduce((state, action) => {
+      return mentionReducer(state, action);
+    }, this.props.model);
+    if (this.props.onChange) {
+      this.props.onChange(newState);
     }
   }
 
@@ -123,8 +120,8 @@ class MentionableTextInput extends React.Component {
   }
 
   renderStyledMentions() {
-    return this.props.value.split('').map((t, idx) => {
-      const isMention = this.props.mentions.reduce((acc, mention) => {
+    return this.props.model.text.split('').map((t, idx) => {
+      const isMention = this.props.model.mentions.reduce((acc, mention) => {
         return this.isInMention(mention, idx) || acc;
       }, false);
       if (isMention) {
@@ -142,7 +139,8 @@ class MentionableTextInput extends React.Component {
         onActions={this.activeMentionAction}
         multiline={true}
         value={undefined}
-        oldValue={this.props.value}
+        oldValue={this.props.model.text}
+        onChangeText={null}
       >
         {this.renderStyledMentions()}
       </TextInputWithAction>
