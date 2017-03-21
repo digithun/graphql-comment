@@ -1,6 +1,8 @@
 import { graphql } from 'react-apollo';
 import gql from 'graphql-tag';
 
+import { normallizeContentAndMentions } from '../../common/utils';
+
 import CommentListView from '../components/CommentListView';
 
 const defaultUserOnComment = gql`
@@ -137,6 +139,7 @@ function createCommentContainer(options = {}) {
     {
       props: ({ ownProps, mutate }) => ({
         reply: ({content, mentions}) => {
+          const normallized = normallizeContentAndMentions(content, mentions);
           return mutate({
             variables: {
               discussionRef: ownProps.discussionRef,
@@ -148,9 +151,15 @@ function createCommentContainer(options = {}) {
               reply: {
                 __typename: 'Comment',
                 _id: 'unknow',
-                content,
+                content: normallized.content,
                 isLiked: false,
                 likeCount: 0,
+                mentions: normallized.mentions.map(mention => {
+                  return {
+                    __typename: 'CommentMentions',
+                    ...mention,
+                  };
+                }),
                 createdAt: (new Date()).toString(),
                 ...optimisticUserResponse({ ownProps, content }),
               },
