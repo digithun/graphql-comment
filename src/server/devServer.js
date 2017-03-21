@@ -50,6 +50,7 @@ function run(options = {}) {
     graphiql: options.graphiql,
     context: {
       getMyRef: () => Promise.resolve('whoami'),
+      getNameFromRef: () => Promise.resolve('Anonymous'),
     },
   }));
 

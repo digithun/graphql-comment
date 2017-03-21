@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 const { composeWithMongoose } = require('graphql-compose-mongoose');
 const { composeWithConnection } = require('graphql-compose-connection');
 const { compose, addResolver, addFilterArg, addResolverMiddleware, addFields } = require('graphql-compose-recompose');
-const resolvers = require('./resolvers');
 
+const { denormalize, normalize } = require('../common/mention');
+
+const resolvers = require('./resolvers');
 const commentSchema = require('./schemas/comment');
 
 const atSlugFilter = {
@@ -61,6 +63,8 @@ function createTypeComposer(options = {}) {
     return addResolver(createResolver({ model, typeComposer }));
   }));
 
+  typeComposer.removeField('content');
+
   typeComposer = compose(
     withResolvers,
     addFilterArg('findMany', atSlugFilter),
@@ -70,6 +74,30 @@ function createTypeComposer(options = {}) {
     addResolverMiddleware('connection', firstLevelSlugMiddleware),
     addResolverMiddleware('count', firstLevelSlugMiddleware),
     addFields({
+      content: {
+        type: 'JSON!',
+        resolve: async (source, args, context) => {
+          if (!context.getNameFromRef) {
+            return source.content;
+          }
+          let objArray = await Promise.all(denormalize(source.content).map(async obj => {
+            if (obj.type === 'mention') {
+              const name = await context.getNameFromRef(obj.id);
+              return Object.assign({}, obj, {
+                text: name,
+              });
+            }
+            return obj;
+          }));
+          const content = normalize(objArray);
+          if (content !== source.content) {
+            source.content = content;
+            await source.save();
+          }
+          return content;
+        },
+        projection: { content: true },
+      },
       isOwner: {
         type: 'Boolean!',
         resolve: async (source, args, context) => {
