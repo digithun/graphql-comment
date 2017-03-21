@@ -96,12 +96,16 @@ class MentionableTextInput extends React.Component {
   }
 
   renderStyledMentions() {
-    return denormalize(this.props.model).map((obj, idx) => {
+    const result = denormalize(this.props.model).map((obj, idx) => {
       if (typeof obj === 'string') {
         return obj;
       }
       return <Text key={idx} style={{color: 'blue'}}>{obj.text}</Text>;
     });
+    if (result.length) {
+      return result;
+    }
+    return '';
   }
 
   render() {
