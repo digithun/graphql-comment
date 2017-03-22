@@ -1,5 +1,5 @@
 function denormalize(text) {
-  const mentionTest = /@{([\w\s]*)}\(([a-zA-Z0-9]*)\)/i;
+  const mentionTest = /@{([\w\s.]*)}\(([a-zA-Z0-9]*)\)/i;
   if (!text.length) {
     return [];
   }
