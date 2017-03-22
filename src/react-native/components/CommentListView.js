@@ -13,12 +13,15 @@ import {
 } from 'react-native';
 import gql from 'graphql-tag';
 
+import { min, max } from '../../common/utils';
+
 import KeyboardAvoidingViewCustom from './KeyboardAvoidingViewCustom';
 import CommentHeader from './CommentHeader';
 import CommentListA from './CommentList';
 import MentionableTextInput from './MentionableTextInput';
 import MockData from '../MockData';
 
+const lineHeight = 25;
 const { height, width } = Dimensions.get('window');
 const stylesTest = StyleSheet.create({
   expand: {
@@ -33,6 +36,7 @@ class CommentList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      textInputHeight: 0,
       inputModel: '',
       isPosting: false,
     };
@@ -46,6 +50,14 @@ class CommentList extends React.Component {
     this.props.reply(this.state.inputModel);
     this.textInput.clear();
     Keyboard.dismiss();
+  }
+
+  onModelChange = (value) => {
+    this.setState({ inputModel: value });
+    let lineCount = ((value || '').match(/\n/g) || []).length + 1;
+    this.setState({
+      textInputHeight: lineCount * lineHeight,
+    });
   }
 
   onPostSuccess = () => {
@@ -65,6 +77,7 @@ class CommentList extends React.Component {
   }
 
   render() {
+    const keyboardHeight = min(max(this.state.textInputHeight, 35), 25 * 3);
     return (
       <View style={{ flex: 1, marginTop: 20 }}>
         <CommentHeader onBackPress={this.props.onBackPress} />
@@ -84,21 +97,21 @@ class CommentList extends React.Component {
         />
 
         <KeyboardAvoidingViewCustom>
-          <View style={{ flexDirection: 'row', alignItems: 'center', width, padding: 5, borderTopWidth: 1, borderTopColor: '#C8C8D0', backgroundColor: '#FFFFFF' }}>
-            <Image style={{ width: 30, height: 20, resizeMode: 'stretch' }} source={require('../img/icon-camera.png')} />
-            <View style={{ marginLeft: 10, flexDirection: 'row', alignItems: 'center', borderColor: '#CACBD2', borderWidth: 1, borderRadius: 5, height: 35, width: this.width - 50 }}>
+          <View style={{ flexDirection: 'row', width, padding: 5, borderTopWidth: 1, borderTopColor: '#C8C8D0', backgroundColor: '#FFFFFF' }}>
+            <Image style={{ width: 30, height: 20, marginTop: 5, resizeMode: 'stretch' }} source={require('../img/icon-camera.png')} />
+            <View style={{ marginLeft: 10, flexDirection: 'row', borderColor: '#CACBD2', borderWidth: 1, borderRadius: 5, height: keyboardHeight, width: this.width - 50 }}>
               <MentionableTextInput
                 multiline={true}
                 ref={node => this.textInput = node}
-                style={{ marginLeft: 10, height: 35, width: 280 }}
-                onChange={value => this.setState({ inputModel: value })}
+                style={{ marginLeft: 10, height: keyboardHeight, flex: 1 }}
+                onModelChange={this.onModelChange}
                 mentions={this.state.mentions}
                 model={this.state.inputModel}
                 placeholder="Write a comment..."
               />
               {
                 this.state.inputModel.length > 0 ?
-                  <TouchableOpacity onPress={this.onSendMessage}>
+                  <TouchableOpacity style={{width: 30, paddingTop: 5}} onPress={this.onSendMessage}>
                     <Image style={{ width: 20, height: 20, resizeMode: 'stretch' }} source={require('../img/icon-message.png')} />
                   </TouchableOpacity> : null
               }

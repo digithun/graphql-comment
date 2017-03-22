@@ -77,8 +77,8 @@ class MentionableTextInput extends React.Component {
     const newState = _actions.reduce((state, action) => {
       return mentionReducer(state, action);
     }, this.props.model);
-    if (this.props.onChange) {
-      this.props.onChange(newState);
+    if (this.props.onModelChange) {
+      this.props.onModelChange(newState);
     }
   }
 
