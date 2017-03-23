@@ -52,9 +52,9 @@ class TextInputWithAction extends React.Component {
   componentWillReceiveProps(nextProps) {
     // need to remove autocomplete if set value to ''
     if (nextProps._value === '') {
-      setTimeout(() => {
-        this.clear();
-      });
+      // setTimeout(() => {
+      //   this.clear();
+      // });
     }
   }
   

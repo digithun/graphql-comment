@@ -1,4 +1,5 @@
-import { graphql } from 'react-apollo';
+import { graphql, compose } from 'react-apollo';
+import defaultProps from 'recompose/defaultProps';
 import gql from 'graphql-tag';
 
 import { normallizeContentAndMentions } from '../../common/utils';
@@ -14,15 +15,32 @@ const defaultUserOnComment = gql`
 const defaultGetAuthorOnComment = comment => ({
   id: comment.authorRef,
   name: "Anonymous",
+  profilePicture: 'https://cdn0.iconfinder.com/data/icons/social-flat-rounded-rects/512/anonymous-128.png',
 });
 
 const defaultOptimisticUserResponse = ({ownProps}) => ({
   authorRef: !ownProps.authorRef ? null : ownProps.authorRef, // can't be undefined
 });
 
+const creatUsereSearcherFromLoadedCommend = (props) => name => {
+  const tester = new RegExp(name, 'i');
+  return Promise.resolve(
+    props.comments
+    .map(commend => props.getAuthorOnComment(commend))
+    .filter(user => tester.test(user.name))
+    .reduce((users, user) => {
+      if (users.find(_user => user.id === _user.id)) {
+        return users;
+      }
+      return users.concat(user);
+    }, [])
+  );
+};
+
 function createCommentContainer(options = {}) {
   const userOnCommentFragment = options.userOnCommentFragment || defaultUserOnComment;
   const getAuthorOnComment = options.getAuthorOnComment || defaultGetAuthorOnComment;
+  const createUserSearcher = options.createUserSearcher || creatUsereSearcherFromLoadedCommend;
   const optimisticUserResponse = options.optimisticUserResponse || defaultOptimisticUserResponse;
   const query = gql`
     query Comments($discussionRef: String!, $after: ConnectionCursor){
@@ -81,6 +99,7 @@ function createCommentContainer(options = {}) {
     }
   `;
 
+
   const mapQueryToProps = ({ ownProps, data }) => {
     if (data.error) {
       console.error(data.error)
@@ -122,12 +141,15 @@ function createCommentContainer(options = {}) {
     },
   });
 
+  const withDefaultUserHandler = defaultProps({
+    getAuthorOnComment,
+    createUserSearcher,
+  });
 
   const withQuery = graphql(
     query,
     {
       props: (...args) => ({
-        getAuthorOnComment: getAuthorOnComment,
         ...mapQueryToProps(...args),
       }),
       options: mapPropsToOptions,
@@ -316,7 +338,14 @@ function createCommentContainer(options = {}) {
     },
   );
   
-  return withQuery(withDelete(withUnlike(withLike(withReply(Forum)))));
+  return compose(
+    withDefaultUserHandler,
+    withQuery,
+    withDelete,
+    withUnlike,
+    withLike,
+    withReply,
+  )(Forum);
 }
 
 export {

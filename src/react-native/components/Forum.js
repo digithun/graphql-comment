@@ -83,6 +83,7 @@ class Forum extends React.Component {
           onReply={this.onReply}
         />
         <CommentBox
+          searcher={this.props.createUserSearcher(this.props)}
           onSendMessage={this.onSendMessage}
           onModelChange={text => this.setState({
             text,
