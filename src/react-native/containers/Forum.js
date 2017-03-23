@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 
 import { normallizeContentAndMentions } from '../../common/utils';
 
-import CommentListView from '../components/CommentListView';
+import Forum from '../components/Forum';
 
 const defaultUserOnComment = gql`
   fragment UserOnComment on Comment {
@@ -33,23 +33,23 @@ function createCommentContainer(options = {}) {
         }
         edges {
           node {
-            ...CommentListView
+            ...Forum
           }
         }
       }
     }
     ${userOnCommentFragment}
-    ${CommentListView.fragment}
+    ${Forum.fragment}
   `;
 
   const replyMutation = gql`
     mutation Reply($discussionRef: String!, $content: JSON!){
       reply(discussionRef: $discussionRef, content: $content) {
-        ...CommentListView
+        ...Forum
       }
     }
     ${userOnCommentFragment}
-    ${CommentListView.fragment}
+    ${Forum.fragment}
   `;
 
   const likeMutation = gql`
@@ -316,7 +316,7 @@ function createCommentContainer(options = {}) {
     },
   );
   
-  return withQuery(withDelete(withUnlike(withLike(withReply(CommentListView)))));
+  return withQuery(withDelete(withUnlike(withLike(withReply(Forum)))));
 }
 
 export {

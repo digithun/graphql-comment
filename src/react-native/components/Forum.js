@@ -32,7 +32,7 @@ const stylesTest = StyleSheet.create({
   },
 });
 
-class CommentList extends React.Component {
+class Forum extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -123,8 +123,8 @@ class CommentList extends React.Component {
   }
 }
 
-CommentList.fragment = gql`
-  fragment CommentListView on Comment {
+Forum.fragment = gql`
+  fragment Forum on Comment {
     _id
     content
     createdAt
@@ -135,4 +135,4 @@ CommentList.fragment = gql`
   }
 `;
 
-export default CommentList;
+export default Forum;
