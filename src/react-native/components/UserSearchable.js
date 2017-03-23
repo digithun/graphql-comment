@@ -78,6 +78,7 @@ function UserSearchable(props) {
   }
   return (
     <ListView
+      keyboardShouldPersistTaps={'always'}
       enableEmptySections={true}
       style={styles.container(props)}
       dataSource={props.userDS}
