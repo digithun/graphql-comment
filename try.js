@@ -1,5 +1,5 @@
 function denormalize(text) {
-  const mentionTest = /@{([\w\s]*)}\(([a-zA-Z0-9]*)\)/i;
+  const mentionTest = /@{([\w\s.]*)}\(([a-zA-Z0-9]*)\)/i;
   if (!text.length) {
     return [];
   }
@@ -7,7 +7,7 @@ function denormalize(text) {
     const matches = mentionTest.exec(text);
     const lastIndex = matches.index + matches[0].length;
     return [].concat(
-      matches.index !== 0 ? text.slice(0, matches.index) : [],
+      matches.index !== 0 ? renderText(text.slice(0, matches.index)) : [],
       {
         type: 'mention',
         text: matches[1],
@@ -40,4 +40,4 @@ function renderText(text) {
   return text.replace(/@#/g, '@').replace(/##/g, '#');
 }
 
-console.log(renderText(escape('a@#cde')))
+console.log(denormalize('@#@{Anonymousab}(123)'))

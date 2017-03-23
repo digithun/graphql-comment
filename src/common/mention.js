@@ -7,7 +7,7 @@ function denormalize(text) {
     const matches = mentionTest.exec(text);
     const lastIndex = matches.index + matches[0].length;
     return [].concat(
-      matches.index !== 0 ? text.slice(0, matches.index) : [],
+      matches.index !== 0 ? renderText(text.slice(0, matches.index)) : [],
       {
         type: 'mention',
         text: matches[1],

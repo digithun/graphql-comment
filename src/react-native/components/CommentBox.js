@@ -7,10 +7,10 @@ import {
 } from 'react-native';
 
 import { min, max } from '../../common/utils';
-import { cleanText } from '../../common/mention';
+import { denormalize, cleanText } from '../../common/mention';
 
 import KeyboardAvoidingViewCustom from './KeyboardAvoidingViewCustom';
-import MentionableTextInput from './MentionableTextInput';
+import MentionableTextInput, { mentionReducer } from './MentionableTextInput';
 import UserSearchable from './UserSearchable';
 
 import withState from 'recompose/withState';
@@ -28,18 +28,33 @@ const lineHeight = 25;
 const withUserSearch = compose(
   withState('searchingName', 'setSearchingName', null),
   withHandlers({
-    onCursorChange: props => debounce(cursor => {
-      const cleaned = cleanText(props.text);
+    onCursorChange: props => debounce((cursor, isChangeText) => {
+      const objArray = denormalize(props.text);
+      let curPos = 0;
+      let obj = objArray.find(obj => {
+        if (cursor - 1 >= curPos && cursor - 1 <= curPos + obj.length - 1) {
+          return true;
+        }
+        curPos += obj.length;
+        return false;
+      });
+      if (!obj || obj.type === 'mention') {
+        if (isChangeText) {
+          props.setSearchingName(null);
+        }
+        return;
+      }
+      let relatedCursor = cursor - curPos;
       let name = '';
       let i;
-      for (i = cursor - 1; i >= 0; i--) {
-        if (cleaned[i] === undefined) {
+      for (i = relatedCursor - 1; i >= 0; i--) {
+        if (obj[i] === undefined) {
           return;
         }
-        if (cleaned[i] === '@') {
+        if (obj[i] === '@') {
           break;
         }
-        name = cleaned[i] + name;
+        name = obj[i] + name;
       }
       if (i >= 0) {
         props.setSearchingName(name);
@@ -59,11 +74,41 @@ const withUserSearch = compose(
   lifecycle({
     componentWillReceiveProps(nextProps) {
       if (this.props.text !== nextProps.text) {
-        nextProps.onCursorChange(nextProps.cursor)
+        nextProps.onCursorChange(nextProps.cursor, true);
       }
     }
   }),
 );
+
+const withMention = withHandlers({
+  onMention: props => user => {
+    props.setSearchingName(null);
+    let cleaned = cleanText(props.text);
+    let i;
+    for (i = props.cursor - 1; i >= 0; i--) {
+      if (cleaned[i] === '@') {
+        break;
+      }
+    }
+    if (i >= 0) {
+      let text = mentionReducer(props.text, {
+        type: 'REMOVE_TEXT',
+        payload: {
+          at: i,
+          length: props.cursor - i,
+        },
+      });
+      text = mentionReducer(text, {
+        type: 'INSERT_MENTION',
+        payload: {
+          at: i,
+          user,
+        },
+      });
+      props.onModelChange(text);
+    }
+  },
+});
 
 function CommentBox(props) {
   const lineCount = ((props.text || '').match(/\n/g) || []).length + 1;
@@ -75,6 +120,7 @@ function CommentBox(props) {
       <UserSearchable
         searchingName={props.searchingName}
         searcher={props.searcher}
+        onPress={props.onMention}
       />
       <View style={{ flexDirection: 'row', width, padding: 5, borderTopWidth: 1, borderTopColor: '#C8C8D0', backgroundColor: '#FFFFFF' }}>
         <Image style={{ width: 30, height: 20, marginTop: 5, resizeMode: 'stretch' }} source={require('../img/icon-camera.png')} />
@@ -99,4 +145,7 @@ function CommentBox(props) {
   );
 }
 
-export default withUserSearch(CommentBox);
+export default compose(
+  withUserSearch,
+  withMention,
+)(CommentBox);

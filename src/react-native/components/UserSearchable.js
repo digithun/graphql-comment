@@ -5,6 +5,7 @@ import {
   ListView,
   StyleSheet,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 
 import compose from 'recompose/compose';
@@ -65,16 +66,16 @@ const withSearch = compose(
   }),
 );
 
-function renderUser(user) {
-  return (
-    <View style={styles.rowContainer}>
-      <Image style={styles.profilePicutre} source={user.profilePicture ? { uri: user.profilePicture } : null} />
-      <Text>{user.name}</Text>
-    </View>
-  );
-}
 
 function UserSearchable(props) {
+  function renderUser(user) {
+    return (
+      <TouchableOpacity style={styles.rowContainer} onPress={() => props.onPress && props.onPress(user)}>
+        <Image style={styles.profilePicutre} source={user.profilePicture ? { uri: user.profilePicture } : null} />
+        <Text>{user.name}</Text>
+      </TouchableOpacity>
+    );
+  }
   return (
     <ListView
       enableEmptySections={true}

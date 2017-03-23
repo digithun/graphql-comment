@@ -13,8 +13,37 @@ import { min, max } from '../../common/utils';
 
 import TextInputWithAction from './TextInputWithAction';
 
-function mentionReducer(text, action) {
+export function mentionReducer(text, action) {
   let objArray = denormalize(text);
+  if (action.type === 'INSERT_MENTION') {
+    const { at, user } = action.payload;
+    const mention = {
+      type: 'mention',
+      text: user.name,
+      id: user.id,
+      length: user.name.length,
+    };
+    let accLength = 0;
+    let isInserted = false;
+    objArray = flatten(objArray.map(obj => {
+      const curPos = accLength;
+      accLength += obj.length; 
+      if (curPos < at && at < curPos + obj.length) {
+        const objText = obj.text ? obj.text : obj;
+        isInserted = true;
+        return [objText.slice(0, at - curPos), mention, objText.slice(at - curPos)];
+      }
+      if (curPos === at) {
+        isInserted = true;
+        return [mention, obj];
+      }
+      return obj;
+    }));
+    if (!isInserted) {
+      objArray.push(mention);
+    }
+    return normalize(objArray);
+  }
   if (action.type === 'INSERT_TEXT') {
     const { at, text } = action.payload;
     let accLength = 0;
