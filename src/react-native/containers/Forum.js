@@ -99,15 +99,15 @@ function createCommentContainer(options = {}) {
             after: data.commentConnection.pageInfo.endCursor,
           },
           updateQuery: (previousResult, { fetchMoreResult }) => {
-            if (!fetchMoreResult.data) {
+            if (!fetchMoreResult) {
               return previousResult;
             }
             return {
               ...previousResult,
               commentConnection: {
                 ...previousResult.commentConnection,
-                pageInfo: fetchMoreResult.data.commentConnection.pageInfo,
-                edges: [...previousResult.commentConnection.edges, ...fetchMoreResult.data.commentConnection.edges],
+                pageInfo: fetchMoreResult.commentConnection.pageInfo,
+                edges: [...previousResult.commentConnection.edges, ...fetchMoreResult.commentConnection.edges],
               },
             };
           },
