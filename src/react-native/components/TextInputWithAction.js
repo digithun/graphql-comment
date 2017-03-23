@@ -45,8 +45,12 @@ function textActions(oldText, newText) {
 class TextInputWithAction extends React.Component {
   constructor(...args) {
     super(...args);
+    this.state = {
+      isClear: false,
+    };
   
     this.onChangeText = this.onChangeText.bind(this);
+    this.onFocus = this.onFocus.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -58,8 +62,20 @@ class TextInputWithAction extends React.Component {
     }
   }
   
+  onFocus() {
+    this.setState({
+      isClear: false,
+    });
+  }
 
   onChangeText(text) {
+    if (this.state.isClear) {
+      this.textInput.clear();
+      this.setState({
+        isClear: false,
+      });
+      return;
+    }
     const actions = textActions(this.props._value, text);
     if (this.props.onActions) {
       this.props.onActions(actions);
@@ -70,6 +86,9 @@ class TextInputWithAction extends React.Component {
   }
 
   clear() {
+    this.setState({
+      isClear: true,
+    });
     this.textInput.clear();
   }
 
@@ -78,6 +97,7 @@ class TextInputWithAction extends React.Component {
       <TextInput
         {...this.props}
         ref={node => this.textInput = node}
+        onFocus={this.onFocus}
         onChangeText={this.onChangeText}
       />
     );

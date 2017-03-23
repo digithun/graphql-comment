@@ -112,10 +112,10 @@ class MentionableTextInput extends React.Component {
   }
 
   clear() {
-    this.textInput.clear();
     this.activeMentionAction({
       type: 'CLEAR',
     });
+    this.textInput.clear();
   }
 
   isInMention(mention, pos) {

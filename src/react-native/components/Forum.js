@@ -43,10 +43,6 @@ class Forum extends React.Component {
   onSendMessage = () => {
     const msg = this.state.text;
     this.props.reply(msg);
-    this.setState({
-      text: '',
-    });
-    Keyboard.dismiss();
   }
 
   onPostSuccess = () => {

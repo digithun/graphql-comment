@@ -4,6 +4,7 @@ import {
   View,
   Image,
   TouchableOpacity,
+  Keyboard,
 } from 'react-native';
 
 import { min, max } from '../../common/utils';
@@ -126,16 +127,23 @@ function CommentBox(props) {
         <Image style={{ width: 30, height: 20, marginTop: 5, resizeMode: 'stretch' }} source={require('../img/icon-camera.png')} />
         <View style={{ marginLeft: 10, flexDirection: 'row', borderColor: '#CACBD2', borderWidth: 1, borderRadius: 5, height: keyboardHeight, width: width - 50 }}>
           <MentionableTextInput
+            ref={node => this.textInput = node}
             multiline={true}
             style={{ marginLeft: 10, height: keyboardHeight, flex: 1 }}
             onModelChange={props.onModelChange}
             onSelectionChange={props.onSelectionChange}
+            onEndEditing={props.onEndEditing}
+            onFocus={props.onFocus}
             model={props.text}
             placeholder="Write a comment..."
           />
           {
             props.text.length > 0 ?
-              <TouchableOpacity style={{width: 30, paddingTop: 5}} onPress={props.onSendMessage}>
+              <TouchableOpacity style={{width: 30, paddingTop: 5}} onPress={() => {
+                props.onSendMessage();
+                Keyboard.dismiss();
+                this.textInput.clear();
+              }}>
                 <Image style={{ width: 20, height: 20, resizeMode: 'stretch' }} source={require('../img/icon-message.png')} />
               </TouchableOpacity> : null
           }
