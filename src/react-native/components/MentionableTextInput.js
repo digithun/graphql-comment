@@ -116,7 +116,7 @@ class MentionableTextInput extends React.Component {
         onActions={this.activeMentionAction}
         multiline={true}
         value={undefined}
-        oldValue={cleanText(this.props.model)}
+        _value={cleanText(this.props.model)}
         onChangeText={null}
       >
         {this.renderStyledMentions()}

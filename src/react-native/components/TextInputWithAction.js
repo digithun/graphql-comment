@@ -49,8 +49,18 @@ class TextInputWithAction extends React.Component {
     this.onChangeText = this.onChangeText.bind(this);
   }
 
+  componentWillReceiveProps(nextProps) {
+    // need to remove autocomplete if set value to ''
+    if (nextProps._value === '') {
+      setTimeout(() => {
+        this.clear();
+      });
+    }
+  }
+  
+
   onChangeText(text) {
-    const actions = textActions(this.props.oldValue, text);
+    const actions = textActions(this.props._value, text);
     if (this.props.onActions) {
       this.props.onActions(actions);
     }

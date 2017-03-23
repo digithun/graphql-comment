@@ -13,15 +13,14 @@ import {
 } from 'react-native';
 import gql from 'graphql-tag';
 
-import { min, max } from '../../common/utils';
-
 import KeyboardAvoidingViewCustom from './KeyboardAvoidingViewCustom';
 import CommentHeader from './CommentHeader';
-import CommentListA from './CommentList';
+import CommentList from './CommentList';
+import CommentBox from './CommentBox';
 import MentionableTextInput from './MentionableTextInput';
+import UserSearchResult from './UserSearchResult';
 import MockData from '../MockData';
 
-const lineHeight = 25;
 const { height, width } = Dimensions.get('window');
 const stylesTest = StyleSheet.create({
   expand: {
@@ -36,28 +35,18 @@ class Forum extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      textInputHeight: 0,
-      inputModel: '',
+      text: '',
       isPosting: false,
     };
   }
-
-  componentWillMount() {
-    this.width = width;
-  }
   
   onSendMessage = () => {
-    this.props.reply(this.state.inputModel);
-    this.textInput.clear();
-    Keyboard.dismiss();
-  }
-
-  onModelChange = (value) => {
-    this.setState({ inputModel: value });
-    let lineCount = ((value || '').match(/\n/g) || []).length + 1;
+    const msg = this.state.text;
+    this.props.reply(msg);
     this.setState({
-      textInputHeight: lineCount * lineHeight,
+      text: '',
     });
+    Keyboard.dismiss();
   }
 
   onPostSuccess = () => {
@@ -65,23 +54,21 @@ class Forum extends React.Component {
       this.setState({
         isPosting: false,
       });
-      this.textInput.clear();
     }
   }
 
   onReply = (comment) => {
     const author = this.props.getAuthorOnComment(comment);
     this.setState({
-      inputModel: `@{${author.name}}(${author.id}) `,
+      text: `@{${author.name}}(${author.id}) `,
     });
   }
 
   render() {
-    const keyboardHeight = min(max(this.state.textInputHeight, 35), 25 * 3);
     return (
       <View style={{ flex: 1, marginTop: 20 }}>
         <CommentHeader onBackPress={this.props.onBackPress} />
-        <CommentListA
+        <CommentList
           ref={(node) => this.commentList = node}
           getAuthorOnComment={this.props.getAuthorOnComment}
           data={this.props.comments}
@@ -95,29 +82,13 @@ class Forum extends React.Component {
           onDeleteComment={this.props.deleteComment}
           onReply={this.onReply}
         />
-
-        <KeyboardAvoidingViewCustom>
-          <View style={{ flexDirection: 'row', width, padding: 5, borderTopWidth: 1, borderTopColor: '#C8C8D0', backgroundColor: '#FFFFFF' }}>
-            <Image style={{ width: 30, height: 20, marginTop: 5, resizeMode: 'stretch' }} source={require('../img/icon-camera.png')} />
-            <View style={{ marginLeft: 10, flexDirection: 'row', borderColor: '#CACBD2', borderWidth: 1, borderRadius: 5, height: keyboardHeight, width: this.width - 50 }}>
-              <MentionableTextInput
-                multiline={true}
-                ref={node => this.textInput = node}
-                style={{ marginLeft: 10, height: keyboardHeight, flex: 1 }}
-                onModelChange={this.onModelChange}
-                mentions={this.state.mentions}
-                model={this.state.inputModel}
-                placeholder="Write a comment..."
-              />
-              {
-                this.state.inputModel.length > 0 ?
-                  <TouchableOpacity style={{width: 30, paddingTop: 5}} onPress={this.onSendMessage}>
-                    <Image style={{ width: 20, height: 20, resizeMode: 'stretch' }} source={require('../img/icon-message.png')} />
-                  </TouchableOpacity> : null
-              }
-            </View>
-          </View>
-        </KeyboardAvoidingViewCustom>
+        <CommentBox
+          onSendMessage={this.onSendMessage}
+          onModelChange={text => this.setState({
+            text,
+          })}
+          text={this.state.text}
+        />
       </View>
     );
   }
