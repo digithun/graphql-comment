@@ -5,7 +5,7 @@ Comment System based on graphql compose
 ## Installation
 
   ```
-  $ npm install git+ssh://git@github.com:digithun/graphql-comment.git
+  $ npm install graphql-comment
   ```
 
 ## Development
