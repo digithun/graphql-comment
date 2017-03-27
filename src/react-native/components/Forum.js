@@ -18,7 +18,6 @@ import CommentHeader from './CommentHeader';
 import CommentList from './CommentList';
 import CommentBox from './CommentBox';
 import MentionableTextInput from './MentionableTextInput';
-import UserSearchResult from './UserSearchResult';
 import MockData from '../MockData';
 
 const { height, width } = Dimensions.get('window');
