@@ -61,7 +61,7 @@ class Forum extends React.Component {
 
   render() {
     return (
-      <View style={{ flex: 1, paddingTop: 20 }}>
+      <View style={{ flex: 1, paddingTop: 20, backgroundColor: 'white' }}>
         <CommentHeader onBackPress={this.props.onBackPress} />
         <CommentList
           ref={(node) => this.commentList = node}
