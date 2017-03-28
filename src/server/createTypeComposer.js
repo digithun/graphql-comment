@@ -7,11 +7,12 @@ const { denormalize, normalize } = require('../common/mention');
 
 const resolvers = require('./resolvers');
 const commentSchema = require('./schemas/comment');
+const { getUserRefFromContext } = require('./helpers');
 
 const atSlugFilter = {
   name: 'atSlug',
   type: 'String',
-  query: (query, value, resolveParams) => {
+  query: (query, value) => {
     if (!/^[\w|\/]*$/i.test(value)) {
       throw new Error('argument not valid');
     }
@@ -101,10 +102,10 @@ function createTypeComposer(options = {}) {
       isOwner: {
         type: 'Boolean!',
         resolve: async (source, args, context) => {
-          if (!context.getMyRef) {
+          const ref = await getUserRefFromContext(context);
+          if (!ref) {
             return false;
           }
-          const ref = await context.getMyRef();
           return ref === source.authorRef;
         },
         projection: { authorRef: true },
@@ -118,10 +119,7 @@ function createTypeComposer(options = {}) {
       isLiked: {
         type: 'Boolean!',
         resolve: async (source, args, context) => {
-          if (!context.getMyRef) {
-            throw new Error('context.getMyRef not exists');
-          }
-          const ref = await context.getMyRef();
+          const ref = await getUserRefFromContext(context);
           const count = await model.count({ _id: source._id, likeRefs: { $in: [ref] } });
           return count > 0;
         },

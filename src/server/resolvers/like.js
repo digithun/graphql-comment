@@ -1,6 +1,6 @@
-const { GraphQLNonNull } = require('graphql');
 const { Resolver } = require('graphql-compose');
 const { GraphQLMongoID } = require('graphql-compose-mongoose');
+const { getUserRefFromContext } = require('../helpers');
 
 function createResolver({
   model,
@@ -12,17 +12,17 @@ function createResolver({
     args: {
       commentId: GraphQLMongoID,
     },
-    resolve: async ({ source, args, context }) => {
+    resolve: async ({ args, context }) => {
       const comment = await model.findOne({_id: args.commentId});
       if (!comment) {
         throw new Error('comment not exists');
       }
-      if (!context.getMyRef) {
-        throw new Error('context.getMyRef not exists');
-      }
-      const ref = await context.getMyRef();
+      const ref = await getUserRefFromContext(context);
       if (!comment.likeRefs) {
         comment.likeRefs = [];
+      }
+      if (!ref) {
+        return comment;
       }
       if (comment.likeRefs.indexOf(ref) !== -1) {
         return comment;
