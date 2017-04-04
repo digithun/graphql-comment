@@ -24,7 +24,6 @@
     "moment": "^2.17.1",
     "mongoose-delete": "^0.3.4",
     "node-fetch": "^1.6.3",
-    "react-apollo": "^1.0.0-rc.2",
     "react-native-invertible-scroll-view": "^1.0.0",
     "recompose": "^0.22.0",
     "text-diff": "^1.0.1"
@@ -34,7 +33,8 @@
     "graphql-compose-connection": "^2.1.3",
     "graphql-compose-mongoose": "^1.4.8",
     "mongoose": "^4.8.6",
-    "react": "*"
+    "react": "*",
+    "react-apollo": "^1.0.0"
   },
   "devDependencies": {
     "graphql": "^0.9.1",
@@ -46,6 +46,7 @@
     "nodemon": "^1.11.0",
     "npm-run-all": "^4.0.2",
     "react": "^15.4.2",
+    "react-apollo": "^1.0.0",
     "react-native": "^0.42.0",
     "restart": "0.0.4"
   }
