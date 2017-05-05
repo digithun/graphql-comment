@@ -35,9 +35,6 @@ const defaultOptions = {
   port: 8080,
   databaseUri: 'mongodb://localhost:27017/comment-standalone-dev',
   graphiql: true,
-  notifyActionInfo: {
-    url: 'http://localhost:8888',
-  },
 };
 
 function run(options = {}) {
@@ -49,7 +46,11 @@ function run(options = {}) {
     schema: buildSchema(options),
     graphiql: options.graphiql,
     context: {
-      getMyRef: () => Promise.resolve('whoami'),
+      nap: {
+        currentUser: {
+          id: '1234',
+        },
+      },
       getNameFromRef: () => Promise.resolve('Anonymous'),
     },
   }));

@@ -1,12 +1,11 @@
 const { GraphQLNonNull } = require('graphql');
-const { Resolver, InputTypeComposer } = require('graphql-compose');
+const { Resolver } = require('graphql-compose');
 const { GraphQLMongoID } = require('graphql-compose-mongoose');
-const moment = require('moment');
+const { getUserRefFromContext } = require('../helpers');
 
 function createResolver({
   model,
   typeComposer,
-  notifier,
 }) {
   const resolver = new Resolver({
     name: 'delete',
@@ -18,10 +17,10 @@ function createResolver({
       if (!args.commentId) {
         throw new Error(`commentId is not defined`);
       }
-      if (!context.getMyRef) {
-        throw new Error('context.getMyRef not exists');
+      const ref = await getUserRefFromContext(context);
+      if (!ref) {
+        throw new Error('ref is null');
       }
-      const ref = await context.getMyRef();
       const comment = await model.findOne({_id: args.commentId});
       if (!comment) {
         throw new Error(`comment not exists`);
