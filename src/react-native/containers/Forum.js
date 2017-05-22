@@ -173,6 +173,7 @@ function createCommentContainer(options = {}) {
                 _id: 'unknow',
                 content: content,
                 isLiked: false,
+                isOwner: true,
                 likeCount: 0,
                 createdAt: (new Date()).toString(),
                 ...optimisticUserResponse({ ownProps, content }),
