@@ -1,9 +1,8 @@
 const { GraphQLNonNull } = require('graphql');
-const { Resolver, InputTypeComposer } = require('graphql-compose');
+const { Resolver } = require('graphql-compose');
 const { GraphQLMongoID } = require('graphql-compose-mongoose');
-const { normallizeContentAndMentions } = require('../../common/utils');
 const moment = require('moment');
-const _ = require('lodash');
+const { getUserRefFromContext } = require('../helpers');
 
 function createResolver({
   model,
@@ -17,12 +16,12 @@ function createResolver({
       commentId: GraphQLMongoID,
       content: 'JSON!',
     },
-    resolve: async ({ source, args, context }) => {
+    resolve: async ({ args, context }) => {
       let slugConcat = '';
       let fullSlugConcat = '';
-      const authorRef = await context.getMyRef();
+      const authorRef = await getUserRefFromContext(context);
       if (args.commentId) {
-        if (!!args.discussionRef) {
+        if (args.discussionRef) {
           throw new Error(`if commentId exists discussionRef should not exists`);
         }
         const comment = await model.findOne({_id: args.commentId});
